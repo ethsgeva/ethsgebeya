@@ -160,10 +160,11 @@ def check_env(request):
 
 
 def companies(request):
-    """Public page: list companies using the new card layout template.
-    Supplies a queryset as `following_sellers` to match the template expectations.
+    """Companies page: show followed companies first.
+    If user follows none, display empty state with Explore button.
+    Always also provide full list for optional explore section.
     """
-    sellers_qs = (
+    base_qs = (
         SellerProfile.objects
         .annotate(
             products_count=Count('product', filter=Q(product__is_active=True), distinct=True),
@@ -174,18 +175,21 @@ def companies(request):
     )
 
     now_time = timezone.localtime().time()
-    sellers = list(sellers_qs)
-    for s in sellers:
+    all_sellers = list(base_qs)
+    for s in all_sellers:
         try:
-            if s.opening_time and s.closing_time:
-                s.is_open_now = (s.opening_time <= now_time <= s.closing_time)
-            else:
-                s.is_open_now = False
+            s.is_open_now = bool(s.opening_time and s.closing_time and s.opening_time <= now_time <= s.closing_time)
         except Exception:
             s.is_open_now = False
 
+    if request.user.is_authenticated:
+        followed_sellers = [s for s in all_sellers if s.followers.filter(id=request.user.id).exists()]
+    else:
+        followed_sellers = []
+
     return render(request, 'ethsgebeya/companies.html', {
-        'following_sellers': sellers,
+        'followed_sellers': followed_sellers,
+        'all_sellers': all_sellers,
     })
     
     

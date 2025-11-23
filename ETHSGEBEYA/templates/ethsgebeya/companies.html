@@ -35,8 +35,8 @@
 {% block content %}
 <div class="container">
     <div class="page-title">
-        <h1>Following Companies</h1>
-        <p class="text-muted">Discover amazing cafes, restaurants, shops, and service providers.</p>
+        <h1>Your Followed Companies</h1>
+        <p class="text-muted">Companies you already follow. Use search or explore new ones below.</p>
     </div>
 
     <div class="controls">
@@ -52,8 +52,8 @@
         </div>
     </div>
 
-    <div class="companies-grid" id="companiesGrid">
-        {% for seller in following_sellers %}
+    <div class="companies-grid" id="followedGrid">
+        {% for seller in followed_sellers %}
         <div class="company-card" data-category="{{ seller.business_type }}">
             <div class="company-header">
                 <div class="company-avatar">
@@ -100,10 +100,73 @@
             </div>
         </div>
         {% empty %}
-        <div class="text-center text-muted py-5">
+        <div class="text-center text-muted py-5 w-100">
             <i class="fas fa-store-slash fa-2x d-block mb-2"></i>
-            <h5>No companies found</h5>
-            <a href="{% url 'companies' %}" class="btn btn-primary mt-3"><i class="fas fa-compass me-1"></i> Explore Companies</a>
+            <h5>No companies followed yet</h5>
+            <p>Start following companies to see them here</p>
+            <a href="#explore" class="btn btn-primary mt-3 w-100"><i class="fas fa-compass me-1"></i> Explore Companies</a>
+        </div>
+        {% endfor %}
+    </div>
+
+    <hr class="my-4">
+    <div class="page-title" id="explore">
+        <h1>Explore Companies</h1>
+        <p class="text-muted">All registered companies on ETHSGEBEYA.</p>
+    </div>
+    <div class="companies-grid" id="exploreGrid">
+        {% for seller in all_sellers %}
+        <div class="company-card" data-category="{{ seller.business_type }}">
+            <div class="company-header">
+                <div class="company-avatar">
+                    {% if seller.create_logo %}
+                        <img src="{{ seller.create_logo.url }}" alt="{{ seller.company_name }}" style="width:100%;height:100%;object-fit:cover;">
+                    {% else %}
+                        <span>{{ seller.company_name|slice:":2"|upper }}</span>
+                    {% endif %}
+                </div>
+                <div class="company-info">
+                    <div class="company-name-wrapper" style="display:flex; align-items:center; gap:.5rem; flex-wrap:wrap;">
+                        <div class="company-name" style="font-weight:700;">{{ seller.company_name }}</div>
+                        {% if seller.is_verified %}
+                            <span class="badge bg-success">Verified</span>
+                        {% endif %}
+                        <span class="company-category {{ seller.business_type }} badge bg-light text-primary">
+                            {{ seller.get_business_type_display|upper }}
+                        </span>
+                    </div>
+                    {% if seller.opening_time and seller.closing_time %}
+                    <div class="small text-muted">
+                        <i class="fas fa-clock me-1"></i>
+                        {{ seller.opening_time|time:"g:i A" }} - {{ seller.closing_time|time:"g:i A" }}
+                        {% if seller.is_open_now %}<span class="text-success fw-semibold ms-2">● Open Now</span>{% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="company-stats">
+                <div class="stat"><div class="stat-value">{{ seller.followers.count }}</div><div class="stat-label">FOLLOWERS</div></div>
+                <div class="stat"><div class="stat-value">{{ seller.avg_rating|default:"4.5" }}</div><div class="stat-label">RATING</div></div>
+                <div class="stat"><div class="stat-value">{{ seller.product_set.count }}</div><div class="stat-label">PRODUCTS</div></div>
+            </div>
+            <div class="company-description p-3 text-muted">{{ seller.description|truncatewords:30 }}</div>
+            <div class="company-actions">
+                <a href="{% url 'seller_profile' seller.id %}" class="btn btn-primary"><i class="fas fa-eye me-1"></i> View Profile</a>
+                <form method="post" action="{% url 'toggle_follow_seller' seller_id=seller.id %}" style="display:inline; flex:1;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-secondary">
+                        {% if request.user.is_authenticated and seller.followers.filter(id=request.user.id).exists %}
+                            <i class="fas fa-user-minus me-1"></i> Unfollow
+                        {% else %}
+                            <i class="fas fa-user-plus me-1"></i> Follow
+                        {% endif %}
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% empty %}
+        <div class="text-center text-muted py-5">
+            <h5>No companies registered yet.</h5>
         </div>
         {% endfor %}
     </div>
@@ -113,9 +176,8 @@
     document.addEventListener('DOMContentLoaded', function(){
         const searchInput=document.getElementById('searchInput');
         const tags=[...document.querySelectorAll('.filter-tag')];
-        const cards=[...document.querySelectorAll('.company-card')];
-
-        function applyFilters(){
+        function filterSection(sectionSelector){
+            const cards=[...document.querySelectorAll(sectionSelector+' .company-card')];
             const term=(searchInput.value||'').toLowerCase();
             const active=(document.querySelector('.filter-tag.active')?.dataset.category)||'all';
             cards.forEach(card=>{
@@ -125,6 +187,10 @@
                 const match=(name.includes(term)||desc.includes(term)) && (active==='all'||cat===active);
                 card.style.display=match?'block':'none';
             });
+        }
+        function applyFilters(){
+            filterSection('#followedGrid');
+            filterSection('#exploreGrid');
         }
         searchInput.addEventListener('input', applyFilters);
         tags.forEach(t=>t.addEventListener('click',()=>{ tags.forEach(x=>x.classList.remove('active')); t.classList.add('active'); applyFilters(); }));
