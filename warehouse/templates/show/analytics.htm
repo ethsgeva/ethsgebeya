@@ -1,0 +1,366 @@
+{% extends 'warehouse/base.html' %}
+{% load static %}
+
+{% block page_title %}<h1>Analytics Dashboard</h1>{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Filter Form -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0 d-flex align-items-center">
+                <i class="fas fa-filter text-primary me-2"></i> Filter Analytics
+            </h5>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row">
+                <div class="col-md-8">
+                    <div class="form-group mb-0">
+                        <label class="form-label">Date Range</label>
+                        <div class="btn-group" role="group" aria-label="Date range">
+                            {% for choice in form.date_range.field.choices %}
+                            <input type="radio" class="btn-check" name="date_range" id="date_range_{{ choice.0 }}" 
+                                   value="{{ choice.0 }}" autocomplete="off" 
+                                   {% if form.date_range.value == choice.0 %}checked{% endif %}>
+                            <label class="btn btn-outline-primary" for="date_range_{{ choice.0 }}">{{ choice.1 }}</label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="form-group mb-0">
+                                <label class="form-label">Start Date</label>
+                                {{ form.start_date }}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-0">
+                                <label class="form-label">End Date</label>
+                                {{ form.end_date }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-12 mt-3 text-end">
+                    <button type="submit" class="btn btn-primary px-4">
+                        <i class="fas fa-sync me-2"></i> Apply Filters
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {% if total_sales or total_revenue or top_products %}
+    <!-- Key Metrics -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-start-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs fw-bold text-primary text-uppercase mb-1">
+                                Total Sales</div>
+                            <div class="h5 mb-0 fw-bold text-gray-800">{{ total_sales }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-shopping-cart fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-start-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs fw-bold text-success text-uppercase mb-1">
+                                Total Revenue</div>
+                            <div class="h5 mb-0 fw-bold text-gray-800">ETB {{ total_revenue|floatformat:2 }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-start-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs fw-bold text-info text-uppercase mb-1">
+                                Avg. Order Value</div>
+                            <div class="h5 mb-0 fw-bold text-gray-800">ETB {{ avg_order_value|floatformat:2 }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-start-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs fw-bold text-warning text-uppercase mb-1">
+                                Date Range</div>
+                            <div class="h6 mb-0 fw-bold text-gray-800">
+                                {{ start_date|date:"M d, Y" }} - {{ end_date|date:"M d, Y" }}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-calendar fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="row">
+        <!-- Sales Chart -->
+        <div class="col-xl-8 col-lg-7">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">Sales Performance</h6>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" 
+                                id="salesChartMenu" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-chart-line me-1"></i> Options
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="salesChartMenu">
+                            <li><a class="dropdown-item" href="#" data-chart="count">Show Order Count</a></li>
+                            <li><a class="dropdown-item" href="#" data-chart="revenue">Show Revenue</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="chart-area position-relative">
+                        <canvas id="salesChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Customer Interactions -->
+        <div class="col-xl-4 col-lg-5">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Customer Interactions</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-pie pt-4">
+                        <canvas id="interactionsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Products -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Top Performing Products</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th>Product</th>
+                                    <th class="text-end">Sales</th>
+                                    <th class="text-end">Revenue</th>
+                                    <th class="text-end">Avg. Price</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for product in top_products %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <img src="{% if product.image %}{{ product.image.url }}{% else %}{% static 'img/default_product.jpg' %}{% endif %}" 
+                                                 class="rounded me-3" width="40" height="40">
+                                            <div>
+                                                <div class="fw-bold">{{ product.title }}</div>
+                                                <small class="text-muted">{{ product.category }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="text-end fw-bold">{{ product.sales_count }}</td>
+                                    <td class="text-end fw-bold text-success">ETB {{ product.revenue|floatformat:2 }}</td>
+                                    <td class="text-end">ETB {{ product.avg_price|floatformat:2 }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-4">
+                                        <i class="fas fa-exclamation-circle me-2"></i> No sales data available
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="empty-state text-center py-5">
+                <i class="fas fa-box-open fa-4x text-muted mb-4"></i>
+                <h3 class="mb-3">No Analytics Data</h3>
+                <p class="text-muted mb-4">No sales or product data found for this period.</p>
+                <a href="{% url 'add_product' %}" class="btn btn-primary px-4">
+                    <i class="fas fa-plus me-2"></i>Add Product
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Sales Chart
+    const salesCtx = document.getElementById('salesChart').getContext('2d');
+    const dates = JSON.parse('{{ dates|escapejs }}');
+    const salesCount = JSON.parse('{{ sales_count|escapejs }}');
+    const salesRevenue = JSON.parse('{{ sales_revenue|escapejs }}');
+    
+    let salesChart = new Chart(salesCtx, {
+        type: 'line',
+        data: {
+            labels: dates,
+            datasets: [{
+                label: 'Number of Orders',
+                data: salesCount,
+                borderColor: '#4e73df',
+                backgroundColor: 'rgba(78, 115, 223, 0.05)',
+                tension: 0.3,
+                fill: true
+            }, {
+                label: 'Revenue (ETB)',
+                data: salesRevenue,
+                borderColor: '#1cc88a',
+                backgroundColor: 'rgba(28, 200, 138, 0.05)',
+                tension: 0.3,
+                fill: true,
+                hidden: true
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    grid: {
+                        display: false
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    }
+                }
+            }
+        }
+    });
+    
+    // Chart toggle buttons
+    document.querySelectorAll('[data-chart]').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const chartType = this.getAttribute('data-chart');
+            
+            if (chartType === 'count') {
+                salesChart.data.datasets[0].hidden = false;
+                salesChart.data.datasets[1].hidden = true;
+            } else if (chartType === 'revenue') {
+                salesChart.data.datasets[0].hidden = true;
+                salesChart.data.datasets[1].hidden = false;
+            }
+            
+            salesChart.update();
+        });
+    });
+    
+    // Interactions Chart
+    const interactionsCtx = document.getElementById('interactionsChart').getContext('2d');
+    const interactionLabels = JSON.parse('{{ interaction_labels|escapejs }}');
+    const interactionCounts = JSON.parse('{{ interaction_counts|escapejs }}');
+    
+    const interactionColors = ['#4e73df', '#36b9cc', '#1cc88a'];
+    
+    new Chart(interactionsCtx, {
+        type: 'doughnut',
+        data: {
+            labels: interactionLabels,
+            datasets: [{
+                data: interactionCounts,
+                backgroundColor: interactionColors,
+                hoverBackgroundColor: interactionColors.map(c => c + 'DD'),
+                hoverBorderColor: "rgba(234, 236, 244, 1)",
+            }],
+        },
+        options: {
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true,
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.label}: ${context.parsed}`;
+                        }
+                    }
+                }
+            },
+            cutout: '70%',
+        },
+    });
+    
+    // Date range selector logic
+    const dateRangeRadios = document.querySelectorAll('input[name="date_range"]');
+    const startDateInput = document.getElementById('id_start_date');
+    const endDateInput = document.getElementById('id_end_date');
+    
+    // Disable custom date inputs unless custom is selected
+    function updateDateInputs() {
+        const customSelected = document.querySelector('input[name="date_range"]:checked').value === 'custom';
+        startDateInput.disabled = !customSelected;
+        endDateInput.disabled = !customSelected;
+    }
+    
+    // Initialize
+    updateDateInputs();
+    
+    // Add change listeners
+    dateRangeRadios.forEach(radio => {
+        radio.addEventListener('change', updateDateInputs);
+    });
+});
+</script>
+{% endblock %}

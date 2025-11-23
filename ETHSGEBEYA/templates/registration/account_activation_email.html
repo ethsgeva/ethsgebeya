@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Activate Your ETHSGEBEYA Account</title>
+    <style>
+        body { background: #f7f7f7; font-family: Arial, sans-serif; color: #222; }
+        .container { background: #fff; border-radius: 12px; box-shadow: 0 2px 12px #093FB420; max-width: 480px; margin: 40px auto; padding: 32px; }
+        .logo { width: 60px; height: 60px; border-radius: 12px; margin-bottom: 16px; }
+        .btn { display: inline-block; background: linear-gradient(90deg, #093FB4 0%, #ED3500 100%); color: #fff; padding: 12px 32px; border-radius: 30px; text-decoration: none; font-weight: bold; margin-top: 24px; }
+        .footer { margin-top: 32px; font-size: 0.9em; color: #888; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <img src="https://ethsgebeya.com/static/img/logo.jpg" alt="ETHSGEBEYA Logo" class="logo">
+        <h2>Welcome to ETHSGEBEYA, {{ user.username }}!</h2>
+        <p>Thank you for registering at <b>ETHSGEBEYA</b>.<br>
+        Please confirm your email address to activate your account and start using all features.</p>
+        <a href="https://{{ domain }}{% url 'activate' uidb64=uid token=token %}" class="btn">Activate My Account</a>
+        <p style="margin-top:24px; color:#ED3500;">If you did not register, you can safely ignore this email.</p>
+        <div class="footer">&copy; 2025 ETHSGEBEYA. All rights reserved.</div>
+    </div>
+</body>
+</html>

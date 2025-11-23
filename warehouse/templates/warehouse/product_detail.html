@@ -1,0 +1,1143 @@
+{% extends 'ethsgebeya/public_base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="product-page">
+    <!-- Product Header Section -->
+    <div class="product-header">
+        <!-- Product Images -->
+        <div class="product-images">
+            <div class="main-image">
+                {% if product.images.first %}
+                    <img src="{{ product.images.first.image.url }}" alt="{{ product.title }}" id="main-product-image">
+                {% else %}
+                    <i class="fas fa-sticky-note" style="font-size: 70px; color: #4A90E2;"></i>
+                {% endif %}
+            </div>
+            
+            {% if product.images.count > 1 %}
+            <div class="image-thumbnails">
+                {% for img in product.images.all %}
+                <div class="thumbnail {% if forloop.first %}active{% endif %}" data-image="{{ img.image.url }}">
+                    {% if img.image %}
+                        <img src="{{ img.image.url }}" alt="{{ product.title }}">
+                    {% else %}
+                        <i class="fas fa-sticky-note"></i>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Product Information -->
+        <div class="product-info">
+            <h1 class="product-title">{{ product.title }}</h1>
+            <div class="product-category">
+                <i class="fas fa-tag"></i> {{ product.category.name }}
+            </div>
+            
+            <!-- Price Section -->
+            <div class="price-section">
+                <div class="current-price">ETB {{ product.price }}</div>
+            </div>
+            
+            <!-- Delivery Status -->
+            {% if product.free_delivery %}
+            <div class="delivery-status">
+                <div class="delivery-icon">
+                    <i class="fas fa-shipping-fast"></i>
+                </div>
+                <div class="delivery-text">
+                    <div class="delivery-title">FREE Delivery Available</div>
+                    {% if product.free_delivery_minimum_amount %}
+                    <div class="delivery-subtitle">On orders above ETB {{ product.free_delivery_minimum_amount }}</div>
+                    {% else %}
+                    <div class="delivery-subtitle">For all orders</div>
+                    {% endif %}
+                </div>
+            </div>
+            {% else %}
+            <div class="delivery-status" style="background: #fff3cd; border-left-color: #ffc107;">
+                <div class="delivery-icon" style="color: #ffc107;">
+                    <i class="fas fa-shipping-fast"></i>
+                </div>
+                <div class="delivery-text">
+                    <div class="delivery-title" style="color: #856404;">Delivery Fee Applies</div>
+                    <div class="delivery-subtitle">Check delivery cost at checkout</div>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="product-description">
+                {{ product.description }}
+            </div>
+
+            <!-- Stock Status -->
+            <div class="stock-status">
+                <div class="stock-indicator" style="background: {% if product.in_stock %}#28a745{% else %}#dc3545{% endif %};"></div>
+                <div class="stock-text" style="color: {% if product.in_stock %}#28a745{% else %}#dc3545{% endif %};">
+                    {% if product.in_stock %}
+                    <i class="fas fa-check-circle"></i> In Stock • {{ product.in_stock }} items available
+                    {% else %}
+                    <i class="fas fa-times-circle"></i> Out of Stock
+                    {% endif %}
+                </div>
+            </div>
+<!-- Product Specifications -->
+<div class="specs-section">
+    <div class="specs-title">
+        <i class="fas fa-info-circle"></i> Product Details
+    </div>
+    <div class="specs-list">
+        {% if product.brand %}
+        <div class="spec-item">
+            <div class="spec-label">
+                <i class="fas fa-tag spec-icon"></i>
+                <span>Brand</span>
+            </div>
+            <div class="spec-value">{{ product.brand }}</div>
+        </div>
+        {% endif %}
+        
+        {% if product.dimensions %}
+        <div class="spec-item">
+            <div class="spec-label">
+                <i class="fas fa-ruler spec-icon"></i>
+                <span>Dimensions</span>
+            </div>
+            <div class="spec-value">{{ product.dimensions }}</div>
+        </div>
+        {% endif %}
+        
+        {% if product.weight %}
+        <div class="spec-item">
+            <div class="spec-label">
+                <i class="fas fa-weight spec-icon"></i>
+                <span>Weight</span>
+            </div>
+            <div class="spec-value">{{ product.weight }}</div>
+        </div>
+        {% endif %}
+        
+        {% if product.material %}
+        <div class="spec-item">
+            <div class="spec-label">
+                <i class="fas fa-palette spec-icon"></i>
+                <span>Material</span>
+            </div>
+            <div class="spec-value">{{ product.material }}</div>
+        </div>
+        {% endif %}
+        
+        <!-- Product Seller Specific Fields -->
+        {% if product.seller.business_type == 'product_seller' %}
+            {% if product.color %}
+            <div class="spec-item">
+                <div class="spec-label">
+                    <i class="fas fa-swatchbook spec-icon"></i>
+                    <span>Color</span>
+                </div>
+                <div class="spec-value">{{ product.color }}</div>
+            </div>
+            {% endif %}
+            
+            {% if product.size_options %}
+            <div class="spec-item">
+                <div class="spec-label">
+                    <i class="fas fa-expand-arrows-alt spec-icon"></i>
+                    <span>Available Sizes</span>
+                </div>
+                <div class="spec-value">
+                    {% for size, available in product.size_options.items %}
+                        {% if available %}{{ size|title }}{% if not forloop.last %}, {% endif %}{% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        {% endif %}
+        
+        <!-- Service Provider Specific Fields -->
+        {% if product.seller.business_type == 'service_provider' %}
+            {% if product.pricing_type %}
+            <div class="spec-item">
+                <div class="spec-label">
+                    <i class="fas fa-money-check-alt spec-icon"></i>
+                    <span>Pricing Type</span>
+                </div>
+                <div class="spec-value">
+                    {% if product.pricing_type == 'fixed' %}Fixed Price
+                    {% elif product.pricing_type == 'hourly' %}Hourly Rate
+                    {% elif product.pricing_type == 'custom' %}Custom Quote
+                    {% else %}{{ product.pricing_type|title }}{% endif %}
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if product.service_duration %}
+            <div class="spec-item">
+                <div class="spec-label">
+                    <i class="fas fa-clock spec-icon"></i>
+                    <span>Service Duration</span>
+                </div>
+                <div class="spec-value">{{ product.service_duration }}</div>
+            </div>
+            {% endif %}
+            
+            {% if product.service_area %}
+            <div class="spec-item">
+                <div class="spec-label">
+                    <i class="fas fa-map-marker-alt spec-icon"></i>
+                    <span>Service Area</span>
+                </div>
+                <div class="spec-value">{{ product.service_area }}</div>
+            </div>
+            {% endif %}
+        {% endif %}
+        
+        <!-- Restaurant/Cafe Specific Fields -->
+        {% if product.seller.business_type == 'cafe_restaurant' %}
+            {% if product.ingredients %}
+            <div class="spec-item">
+                <div class="spec-label">
+                    <i class="fas fa-mortar-pestle spec-icon"></i>
+                    <span>Ingredients</span>
+                </div>
+                <div class="spec-value">{{ product.ingredients }}</div>
+            </div>
+            {% endif %}
+            
+            {% if product.preparation_time %}
+            <div class="spec-item">
+                <div class="spec-label">
+                    <i class="fas fa-stopwatch spec-icon"></i>
+                    <span>Preparation Time</span>
+                </div>
+                <div class="spec-value">{{ product.preparation_time }}</div>
+            </div>
+            {% endif %}
+            
+            {% if product.dietary_info %}
+            <div class="spec-item">
+                <div class="spec-label">
+                    <i class="fas fa-leaf spec-icon"></i>
+                    <span>Dietary Information</span>
+                </div>
+                <div class="spec-value">{{ product.dietary_info }}</div>
+            </div>
+            {% endif %}
+        {% endif %}
+        
+        <!-- Availability Information -->
+        <div class="spec-item">
+            <div class="spec-label">
+                <i class="fas fa-calendar-check spec-icon"></i>
+                <span>Availability</span>
+            </div>
+            <div class="spec-value">
+                {% if product.available_now %}
+                    {% if product.seller.business_type == 'service_provider' %}
+                        Available for Booking
+                    {% elif product.seller.business_type == 'cafe_restaurant' %}
+                        Available Now
+                    {% else %}
+                        In Stock
+                    {% endif %}
+                {% else %}
+                    {% if product.seller.business_type == 'service_provider' %}
+                        By Appointment Only
+                    {% elif product.seller.business_type == 'cafe_restaurant' %}
+                        Currently Unavailable
+                    {% else %}
+                        Out of Stock
+                    {% endif %}
+                {% endif %}
+                {% if product.availability_schedule %}
+                    • Schedule Required
+                {% endif %}
+            </div>
+        </div>
+        
+
+        <!-- Product Condition -->
+        <div class="spec-item">
+            <div class="spec-label">
+                <i class="fas fa-certificate spec-icon"></i>
+                <span>Status</span>
+            </div>
+            <div class="spec-value">
+                {% if product.is_active %}
+                    <span style="color: #28a745;">
+                        {% if product.seller.business_type == 'service_provider' %}
+                            Active Service
+                        {% elif product.seller.business_type == 'cafe_restaurant' %}
+                            Menu Item Available
+                        {% else %}
+                            Active Product
+                        {% endif %}
+                    </span>
+                {% else %}
+                    <span style="color: #dc3545;">
+                        {% if product.seller.business_type == 'service_provider' %}
+                            Service Unavailable
+                        {% elif product.seller.business_type == 'cafe_restaurant' %}
+                            Item Not Available
+                        {% else %}
+                            Product Inactive
+                        {% endif %}
+                    </span>
+                {% endif %}
+            </div>
+        </div>
+        
+       
+        
+       
+        <!-- Date Added -->
+        <div class="spec-item">
+            <div class="spec-label">
+                <i class="fas fa-calendar-plus spec-icon"></i>
+                <span>Date Added</span>
+            </div>
+            <div class="spec-value">{{ product.created_at|date:"M d, Y" }}</div>
+        </div>
+    </div>
+</div>
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                {% if user.is_authenticated %}
+                    {% if user.profile.role == 'buyer' %}
+                        {% if product.in_stock %}
+                        <a href="{% url 'cart_add' product_id=product.id %}" class="btn btn-primary" id="cartBtn">
+                            <i class="fas fa-shopping-cart"></i> Add to Cart
+                        </a>
+                        {% else %}
+                        <button class="btn btn-primary" disabled>
+                            <i class="fas fa-shopping-cart"></i> Out of Stock
+                        </button>
+                        {% endif %}
+                    {% else %}
+                        <button class="btn btn-primary" disabled>
+                            Add to Cart (Switch to buyer role)
+                        </button>
+                    {% endif %}
+                {% else %}
+                    <a href="{% url 'sign-in' %}?next={{ request.path }}" class="btn btn-primary">
+                        <i class="fas fa-shopping-cart"></i> Sign in to Add to Cart
+                    </a>
+                {% endif %}
+                
+                {% if user.is_authenticated %}
+                    {% if user.profile.role == 'buyer' %}
+                        {% with wishlist=user.wishlists.first %}
+                            {% if wishlist and product in wishlist.products.all %}
+                                <form method="post" action="{% url 'remove_from_wishlist' %}" class="wishlist-form">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="product_id" value="{{ product.id }}">
+                                    <button type="submit" class="btn btn-secondary" id="wishlistBtn">
+                                        <i class="fas fa-heart-broken"></i> Remove from Wishlist
+                                    </button>
+                                </form>
+                            {% else %}
+                                <form method="post" action="{% url 'add_to_wishlist' %}" class="wishlist-form">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="product_id" value="{{ product.id }}">
+                                    <button type="submit" class="btn btn-secondary" id="wishlistBtn">
+                                        <i class="fas fa-heart"></i> Save
+                                    </button>
+                                </form>
+                            {% endif %}
+                        {% endwith %}
+                    {% else %}
+                        <button class="btn btn-secondary" disabled>
+                            Save (Switch to buyer role)
+                        </button>
+                    {% endif %}
+                {% else %}
+                    <a href="{% url 'sign-in' %}?next={{ request.path }}" class="btn btn-secondary">
+                        <i class="fas fa-heart"></i> Sign in to Save
+                    </a>
+                {% endif %}
+            </div>
+
+            <!-- Delivery Information Card -->
+            <div class="delivery-info-card" style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #4A90E2;">
+                <h4 style="margin-bottom: 10px; color: #1565C0; display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-info-circle"></i> Delivery Information
+                </h4>
+                <div style="font-size: 14px; color: #666;">
+                    {% if product.free_delivery %}
+                        <p style="margin-bottom: 5px;">✅ <strong>Free delivery available</strong></p>
+                        {% if product.free_delivery_minimum_amount %}
+                        <p style="margin: 0;">Minimum order: ETB {{ product.free_delivery_minimum_amount }}</p>
+                        {% else %}
+                        <p style="margin: 0;">Free for all orders</p>
+                        {% endif %}
+                    {% else %}
+                        <p style="margin-bottom: 5px;">⚠️ <strong>Delivery fee applies</strong></p>
+                        <p style="margin: 0;">Delivery cost calculated at checkout</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Seller Info -->
+            <div class="seller-info">
+                <div class="seller-content">
+                    <div class="seller-details">
+                        <div class="seller-name">{{ product.seller.company_name }}</div>
+                        <div class="verified-badge">
+                            <i class="fas fa-shield-alt"></i> Verified
+                        </div>
+                    </div>
+                    <a href="{% url 'seller_profile' product.seller.id %}" class="visit-store-btn" id="visitStoreBtn">
+                        <i class="fas fa-store"></i> Visit Store
+                    </a>
+                </div>
+                {% if product.seller.delivery_info %}
+                <div class="seller-delivery" style="margin-top: 8px; font-size: 13px; color: #28a745;">
+                    <i class="fas fa-truck"></i> {{ product.seller.delivery_info }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Reviews Section -->
+    <div class="reviews-section">
+        <div class="reviews-header">
+            <div>
+                <h2 class="reviews-title">
+                    <i class="fas fa-star"></i> Customer Reviews
+                </h2>
+                <div style="color: var(--text-light); font-size: 14px;">
+                    What customers are saying
+                </div>
+            </div>
+            {% if avg_rating %}
+            <div class="rating-overview">
+                <div class="average-rating">{{ avg_rating|floatformat:1 }}</div>
+                <div class="stars">
+                    {% for i in "12345" %}
+                        {% if forloop.counter <= avg_rating|floatformat:0 %}
+                            <i class="fas fa-star"></i>
+                        {% else %}
+                            <i class="far fa-star"></i>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                <div class="total-reviews">{{ reviews.count }} review{{ reviews.count|pluralize }}</div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Review Cards -->
+        {% for review in reviews %}
+        <div class="review-card">
+            <div class="review-header">
+                <div class="reviewer-info">
+                    <div class="reviewer-avatar">{{ review.user.username|first|upper }}</div>
+                    <div class="reviewer-details">
+                        <div class="reviewer-name">{{ review.user.username }}</div>
+                        <div class="review-rating">
+                            {% for i in "12345" %}
+                                {% if forloop.counter <= review.rating %}
+                                    <i class="fas fa-star"></i>
+                                {% else %}
+                                    <i class="far fa-star"></i>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <div class="review-date">
+                    {{ review.created_at|date:"M d, Y" }}
+                </div>
+            </div>
+            <div class="review-text">
+                {{ review.text }}
+            </div>
+        </div>
+        {% empty %}
+        <div class="no-reviews" style="text-align: center; padding: 40px; color: var(--text-light);">
+            <i class="fas fa-comment-slash" style="font-size: 48px; margin-bottom: 16px;"></i>
+            <p>No reviews yet. Be the first to review this product!</p>
+        </div>
+        {% endfor %}
+
+        <!-- User Review Status -->
+        {% if user.is_authenticated and not user_review %}
+        <div class="add-review-section" style="margin-top: 30px;">
+            <h3 style="margin-bottom: 20px; color: var(--dark-blue);">Write a Review</h3>
+            <form method="post" class="review-form">
+                {% csrf_token %}
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: bold;">Your Rating</label>
+                    <div class="star-rating">
+                        {% for i in "12345" %}
+                        <span class="star" data-rating="{{ forloop.counter }}">★</span>
+                        {% endfor %}
+                    </div>
+                    <input type="hidden" name="rating" id="id_rating" required>
+                </div>
+                
+                <div style="margin-bottom: 20px;">
+                    <label for="id_text" style="display: block; margin-bottom: 8px; font-weight: bold;">Your Review</label>
+                    <textarea name="text" id="id_text" rows="4" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; resize: vertical;" placeholder="Share your experience with this product..." required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary" style="padding: 12px 30px;">Submit Review</button>
+            </form>
+        </div>
+        {% elif user_review %}
+        <div class="user-review-status">
+            <div class="status-text">
+                <i class="fas fa-info-circle"></i> 
+                You have already reviewed this product
+            </div>
+        </div>
+        {% else %}
+        <div class="user-review-status">
+            <div class="status-text">
+                <i class="fas fa-info-circle"></i> 
+                Please <a href="{% url 'sign-in' %}?next={{ request.path }}" style="color: var(--primary-blue);">sign in</a> to leave a review
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+:root {
+    --primary-blue: #4A90E2;
+    --light-blue: #E3F2FD;
+    --dark-blue: #1565C0;
+    --accent-yellow: #FFD700;
+    --text-dark: #333333;
+    --text-light: #666666;
+    --white: #FFFFFF;
+    --success-green: #28a745;
+    --discount-red: #e74c3c;
+    --gray-bg: #f8f9fa;
+}
+
+.product-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.product-header {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    margin-bottom: 25px;
+}
+
+.product-images {
+    background: var(--white);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    position: relative;
+}
+
+.main-image {
+    width: 100%;
+    height: 350px;
+    background: var(--light-blue);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 12px;
+    overflow: hidden;
+}
+
+.main-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.image-thumbnails {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+}
+
+.thumbnail {
+    width: 70px;
+    height: 70px;
+    background: var(--light-blue);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.thumbnail.active {
+    border-color: var(--primary-blue);
+}
+
+.thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.product-info {
+    background: var(--white);
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.product-title {
+    font-size: 28px;
+    font-weight: bold;
+    color: var(--dark-blue);
+    margin-bottom: 8px;
+}
+
+.product-category {
+    color: var(--text-light);
+    font-size: 14px;
+    margin-bottom: 15px;
+    padding: 4px 10px;
+    background: var(--light-blue);
+    border-radius: 15px;
+    display: inline-block;
+}
+
+.price-section {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+}
+
+.current-price {
+    font-size: 32px;
+    font-weight: bold;
+    color: var(--primary-blue);
+}
+
+.delivery-status {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 15px;
+    padding: 12px;
+    border-radius: 8px;
+    background: #f0f8f0;
+    border-left: 4px solid var(--success-green);
+}
+
+.delivery-icon {
+    color: var(--success-green);
+    font-size: 18px;
+}
+
+.delivery-text {
+    flex: 1;
+}
+
+.delivery-title {
+    font-weight: bold;
+    color: var(--success-green);
+    font-size: 14px;
+}
+
+.delivery-subtitle {
+    color: var(--text-light);
+    font-size: 12px;
+}
+
+.product-description {
+    color: var(--text-dark);
+    margin-bottom: 20px;
+    line-height: 1.6;
+    font-size: 15px;
+}
+
+.stock-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+    padding: 10px 12px;
+    background: var(--light-blue);
+    border-radius: 6px;
+}
+
+.stock-indicator {
+    width: 10px;
+    height: 10px;
+    background: var(--success-green);
+    border-radius: 50%;
+}
+
+.stock-text {
+    font-weight: bold;
+    color: var(--success-green);
+    font-size: 14px;
+}
+
+.specs-section {
+    margin-bottom: 20px;
+}
+
+.specs-title {
+    font-size: 16px;
+    font-weight: bold;
+    color: var(--dark-blue);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.specs-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.spec-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.spec-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-dark);
+    font-size: 14px;
+}
+
+.spec-icon {
+    color: var(--primary-blue);
+    width: 16px;
+}
+
+.spec-value {
+    color: var(--text-light);
+    font-size: 14px;
+    text-align: right;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.btn {
+    padding: 14px 24px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 15px;
+    flex: 1;
+    justify-content: center;
+    text-decoration: none;
+}
+
+.btn-primary {
+    background: var(--primary-blue);
+    color: var(--white);
+}
+
+.btn-primary:hover {
+    background: var(--dark-blue);
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background: transparent;
+    color: var(--primary-blue);
+    border: 2px solid var(--primary-blue);
+}
+
+.btn-secondary:hover {
+    background: var(--primary-blue);
+    color: var(--white);
+}
+
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.seller-info {
+    background: var(--light-blue);
+    padding: 16px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.seller-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.seller-details {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.seller-name {
+    font-weight: bold;
+    color: var(--dark-blue);
+    font-size: 16px;
+}
+
+.verified-badge {
+    background: var(--success-green);
+    color: var(--white);
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.visit-store-btn {
+    background: var(--primary-blue);
+    color: var(--white);
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.3s ease;
+    font-size: 13px;
+    text-decoration: none;
+}
+
+.visit-store-btn:hover {
+    background: var(--dark-blue);
+}
+
+.reviews-section {
+    background: var(--white);
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.reviews-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.rating-overview {
+    text-align: center;
+    min-width: 120px;
+}
+
+.average-rating {
+    font-size: 36px;
+    font-weight: bold;
+    color: var(--primary-blue);
+    line-height: 1;
+}
+
+.stars {
+    color: var(--accent-yellow);
+    font-size: 16px;
+    margin: 6px 0;
+}
+
+.total-reviews {
+    color: var(--text-light);
+    font-size: 12px;
+}
+
+.reviews-title {
+    color: var(--dark-blue);
+    font-size: 20px;
+}
+
+.review-card {
+    background: var(--gray-bg);
+    padding: 16px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+
+.review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.reviewer-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.reviewer-avatar {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    background: var(--primary-blue);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--white);
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.reviewer-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.reviewer-name {
+    font-weight: bold;
+    color: var(--text-dark);
+    font-size: 14px;
+}
+
+.review-rating {
+    color: var(--accent-yellow);
+    font-size: 13px;
+}
+
+.review-date {
+    color: var(--text-light);
+    font-size: 12px;
+}
+
+.review-text {
+    line-height: 1.5;
+    color: var(--text-dark);
+    font-size: 14px;
+}
+
+.user-review-status {
+    background: var(--light-blue);
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 20px;
+    text-align: center;
+}
+
+.status-text {
+    color: var(--text-dark);
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.star-rating {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 10px;
+}
+
+.star-rating .star {
+    font-size: 24px;
+    color: #ddd;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.star-rating .star:hover,
+.star-rating .star.active {
+    color: var(--accent-yellow);
+}
+
+@media (max-width: 768px) {
+    .product-header {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .product-page {
+        padding: 15px;
+    }
+
+    .product-info {
+        padding: 20px;
+    }
+
+    .product-title {
+        font-size: 24px;
+    }
+
+    .current-price {
+        font-size: 28px;
+    }
+
+    .action-buttons {
+        flex-direction: column;
+    }
+
+    .main-image {
+        height: 280px;
+    }
+
+    .reviews-header {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .seller-content {
+        flex-direction: column;
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .product-page {
+        padding: 10px;
+    }
+
+    .product-title {
+        font-size: 22px;
+    }
+
+    .current-price {
+        font-size: 24px;
+    }
+
+    .btn {
+        padding: 12px 16px;
+        font-size: 14px;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Image thumbnail functionality
+    const thumbnails = document.querySelectorAll('.thumbnail');
+    const mainImage = document.getElementById('main-product-image');
+    
+    if (thumbnails.length > 0 && mainImage) {
+        thumbnails.forEach(thumb => {
+            thumb.addEventListener('click', () => {
+                thumbnails.forEach(t => t.classList.remove('active'));
+                thumb.classList.add('active');
+                
+                const imageUrl = thumb.getAttribute('data-image');
+                if (imageUrl) {
+                    mainImage.src = imageUrl;
+                }
+            });
+        });
+    }
+
+    // Star rating functionality for review form
+    const stars = document.querySelectorAll('.star-rating .star');
+    const ratingInput = document.getElementById('id_rating');
+    
+    if (stars.length > 0 && ratingInput) {
+        stars.forEach(star => {
+            star.addEventListener('click', function() {
+                const rating = this.getAttribute('data-rating');
+                ratingInput.value = rating;
+                
+                stars.forEach(s => s.classList.remove('active'));
+                for (let i = 0; i < rating; i++) {
+                    stars[i].classList.add('active');
+                }
+            });
+            
+            star.addEventListener('mouseover', function() {
+                const rating = this.getAttribute('data-rating');
+                stars.forEach(s => s.classList.remove('active'));
+                for (let i = 0; i < rating; i++) {
+                    stars[i].classList.add('active');
+                }
+            });
+        });
+        
+        // Reset stars on mouse leave if no rating selected
+        stars[0].parentElement.addEventListener('mouseleave', function() {
+            if (!ratingInput.value) {
+                stars.forEach(s => s.classList.remove('active'));
+            } else {
+                stars.forEach(s => s.classList.remove('active'));
+                for (let i = 0; i < ratingInput.value; i++) {
+                    stars[i].classList.add('active');
+                }
+            }
+        });
+    }
+
+    // Add to cart button feedback
+    const cartBtn = document.getElementById('cartBtn');
+    if (cartBtn && !cartBtn.disabled) {
+        cartBtn.addEventListener('click', function(e) {
+            if (this.tagName === 'A') {
+                // Show loading state
+                const originalText = this.innerHTML;
+                this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding...';
+                this.style.background = 'var(--success-green)';
+                
+                setTimeout(() => {
+                    this.innerHTML = originalText;
+                    this.style.background = '';
+                }, 2000);
+            }
+        });
+    }
+
+    // Wishlist button feedback
+    const wishlistBtn = document.getElementById('wishlistBtn');
+    if (wishlistBtn && !wishlistBtn.disabled) {
+        wishlistBtn.addEventListener('click', function(e) {
+            const originalText = this.innerHTML;
+            const isRemove = this.innerHTML.includes('Remove');
+            
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            
+            setTimeout(() => {
+                if (isRemove) {
+                    this.innerHTML = '<i class="fas fa-heart"></i> Save';
+                    this.closest('form').action = "{% url 'add_to_wishlist' %}";
+                } else {
+                    this.innerHTML = '<i class="fas fa-heart-broken"></i> Remove from Wishlist';
+                    this.closest('form').action = "{% url 'remove_from_wishlist' %}";
+                }
+            }, 1000);
+        });
+    }
+});
+</script>
+{% endblock %}

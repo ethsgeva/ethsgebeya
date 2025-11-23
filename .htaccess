@@ -1,0 +1,75 @@
+RewriteEngine on
+
+RewriteCond %{HTTP_REFERER} !^$
+RewriteCond %{HTTP_REFERER} !^http://companya.ethsgebeya.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://companya.ethsgebeya.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://ethsgebeya.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://ethsgebeya.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://test.ethsgebeya.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://test.ethsgebeya.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://www.companya.ethsgebeya.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://www.companya.ethsgebeya.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://www.ethsgebeya.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://www.ethsgebeya.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://www.test.ethsgebeya.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://www.test.ethsgebeya.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://companya.ethsgebeya.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://companya.ethsgebeya.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://ethsgebeya.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://ethsgebeya.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://test.ethsgebeya.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://test.ethsgebeya.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://www.companya.ethsgebeya.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://www.companya.ethsgebeya.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://www.ethsgebeya.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://www.ethsgebeya.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://www.test.ethsgebeya.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://www.test.ethsgebeya.com$      [NC]
+# RewriteRule .*\.(jpg|jpeg|gif|png|bmp)$ - [F,NC]
+
+RewriteEngine on
+# DO NOT REMOVE OR MODIFY. CLOUDLINUX ENV VARS CONFIGURATION BEGIN
+<IfModule Litespeed>
+</IfModule>
+# DO NOT REMOVE OR MODIFY. CLOUDLINUX ENV VARS CONFIGURATION END
+
+RewriteCond %{HTTP_REFERER} !^$
+RewriteCond %{HTTP_REFERER} !^http://companya.ethsgebeya.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://companya.ethsgebeya.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://ethsgebeya.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://ethsgebeya.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://test.ethsgebeya.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://test.ethsgebeya.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://www.companya.ethsgebeya.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://www.companya.ethsgebeya.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://www.ethsgebeya.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://www.ethsgebeya.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://www.test.ethsgebeya.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://www.test.ethsgebeya.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://companya.ethsgebeya.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://companya.ethsgebeya.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://ethsgebeya.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://ethsgebeya.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://test.ethsgebeya.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://test.ethsgebeya.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://www.companya.ethsgebeya.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://www.companya.ethsgebeya.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://www.ethsgebeya.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://www.ethsgebeya.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://www.test.ethsgebeya.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://www.test.ethsgebeya.com$      [NC]
+# RewriteRule .*\.(jpg|jpeg|gif|png|bmp)$ - [F,NC]
+
+
+
+Alias /media/ /home/ethsgeva/ethsgebeya.com/media/
+<Directory /home/ethsgeva/ethsgebeya.com/media/>
+    Require all granted
+</Directory>
+
+
+# DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION BEGIN
+PassengerAppRoot "/home/ethsgeva/company.ethsgebeya.com"
+PassengerBaseURI "/"
+PassengerPython "/home/ethsgeva/virtualenv/company.ethsgebeya.com/3.11/bin/python"
+# DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION END

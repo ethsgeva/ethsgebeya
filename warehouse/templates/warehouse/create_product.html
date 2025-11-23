@@ -1,0 +1,1380 @@
+{% extends 'warehouse/base.html' %}
+{% load bootstrap4 %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="row justify-content-center">
+    <div class="col">
+      <!-- Success message block -->
+      {% if messages %}
+        <div class="mt-3" id="django-messages-container">
+          {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+              <i class="fas {% if message.tags == 'success' %}fa-check-circle{% else %}fa-exclamation-circle{% endif %} me-2"></i>{{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+      
+      <div id="seller-profile-message" class="alert alert-warning mb-4 d-none" role="alert">
+        <div class="d-flex align-items-center">
+          <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
+          <div>
+            <h5 class="alert-heading mb-1">Complete Your Store Profile First!</h5>
+            <p class="mb-0">Please fill out your store information before adding products</p>
+          </div>
+        </div>
+      </div>
+      
+      {% if request.user.sellerprofile.company_name %}
+      
+      <div class="card border-0 modern-card">
+        <div class="card-body p-5">
+          <form method="post" enctype="multipart/form-data" id="product-form">
+            {% csrf_token %}
+            <div class="row">
+              <!-- Left Column - Basic Information -->
+              <div class="col-md-6">
+                <div class="form-section modern-form-section mb-5">
+                  <div class="section-header modern-section-header d-flex align-items-center mb-4">
+                    <div class="modern-icon-circle bg-gradient-blue text-white me-3">
+                      <i class="fas fa-info-circle"></i>
+                    </div>
+                    <div>
+                      <h6 class="mb-1 modern-section-title">
+                        {% if request.user.sellerprofile.business_type == 'product_seller' %}
+                          Product Information
+                        {% elif request.user.sellerprofile.business_type == 'service_provider' %}
+                          Service Information
+                        {% elif request.user.sellerprofile.business_type == 'cafe_restaurant' %}
+                          Menu Item Information
+                        {% endif %}
+                      </h6>
+                      <p class="mb-0 text-muted modern-section-subtitle">Basic details</p>
+                    </div>
+                  </div>
+                  
+                  <!-- Basic Fields for All Business Types -->
+                  <div class="modern-form-group">
+                    <label class="modern-form-label">
+                      <i class="fas fa-tag modern-icon"></i>
+                      {% if request.user.sellerprofile.business_type == 'product_seller' %}
+                        Product Name *
+                      {% elif request.user.sellerprofile.business_type == 'service_provider' %}
+                        Service Name *
+                      {% elif request.user.sellerprofile.business_type == 'cafe_restaurant' %}
+                        Menu Item Name *
+                      {% endif %}
+                    </label>
+                    {{ product_form.title|attr:"class:modern-form-control"|attr:"placeholder:Enter name" }}
+                    {% if product_form.title.errors %}
+                      <div class="text-danger small mt-1">{{ product_form.title.errors }}</div>
+                    {% endif %}
+                  </div>
+                  
+                  <div class="modern-form-group">
+                    <label class="modern-form-label">
+                      <i class="fas fa-dollar-sign modern-icon"></i>Price *
+                    </label>
+                    {{ product_form.price|attr:"class:modern-form-control"|attr:"placeholder:0.00" }}
+                    {% if product_form.price.errors %}
+                      <div class="text-danger small mt-1">{{ product_form.price.errors }}</div>
+                    {% endif %}
+                    <div class="modern-form-text">Price in Birr</div>
+                  </div>
+
+                  <div class="modern-form-group">
+                    <label class="modern-form-label">
+                      <i class="fas fa-align-left modern-icon"></i>Description *
+                    </label>
+                    {{ product_form.description|attr:"class:modern-form-control"|attr:"rows:4"|attr:"placeholder:Enter detailed description" }}
+                    {% if product_form.description.errors %}
+                      <div class="text-danger small mt-1">{{ product_form.description.errors }}</div>
+                    {% endif %}
+                  </div>
+                  
+                  <div class="modern-form-group">
+                    <label class="modern-form-label">
+                      <i class="fas fa-tag modern-icon"></i>Category *
+                    </label>
+                    {{ product_form.category|attr:"class:modern-form-control" }}
+                    {% if product_form.category.errors %}
+                      <div class="text-danger small mt-1">{{ product_form.category.errors }}</div>
+                    {% endif %}
+                  </div>
+
+                  <!-- Product-specific fields -->
+                  <div class="product-specific-fields" {% if request.user.sellerprofile.business_type != 'product_seller' %}style="display: none;"{% endif %}>
+                    <div class="row">
+                      <div class="col-md-6">
+                        <div class="modern-form-group">
+                          <label class="modern-form-label">
+                            <i class="fas fa-cubes modern-icon"></i>Stock Quantity
+                          </label>
+                          {{ product_form.stock_quantity|attr:"class:modern-form-control"|attr:"placeholder:0" }}
+                          {% if product_form.stock_quantity.errors %}
+                            <div class="text-danger small mt-1">{{ product_form.stock_quantity.errors }}</div>
+                          {% endif %}
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="modern-form-group">
+                          <label class="modern-form-label">
+                            <i class="fas fa-toggle-on modern-icon"></i>Status
+                          </label>
+                          <div class="modern-form-check form-switch">
+                            {{ product_form.is_active|attr:"class:form-check-input" }}
+                            <label class="form-check-label" for="{{ product_form.is_active.id_for_label }}">
+                              Active
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="modern-form-group">
+                      <label class="modern-form-label">
+                        <i class="fas fa-swatchbook modern-icon"></i>Color
+                      </label>
+                      {{ product_form.color|attr:"class:modern-form-control"|attr:"placeholder:e.g., Red, Blue" }}
+                      {% if product_form.color.errors %}
+                        <div class="text-danger small mt-1">{{ product_form.color.errors }}</div>
+                      {% endif %}
+                    </div>
+                    
+                    <div class="modern-form-group">
+                      <label class="modern-form-label">
+                        <i class="fas fa-trademark modern-icon"></i>Brand
+                      </label>
+                      {{ product_form.brand|attr:"class:modern-form-control"|attr:"placeholder:Enter brand name" }}
+                      {% if product_form.brand.errors %}
+                        <div class="text-danger small mt-1">{{ product_form.brand.errors }}</div>
+                      {% endif %}
+                    </div>
+
+                    <!-- Size Options for Products -->
+                    <div class="modern-form-group">
+                      <label class="modern-form-label">
+                        <i class="fas fa-expand-arrows-alt modern-icon"></i>Available Sizes
+                      </label>
+                      <div class="modern-size-options">
+                        {% for choice in product_form.size_options.field.choices %}
+                          <div class="modern-form-check form-check-inline me-3 mb-2">
+                            <input class="form-check-input" type="checkbox" name="{{ product_form.size_options.name }}" 
+                                   value="{{ choice.0 }}" id="size_{{ choice.0 }}"
+                                   {% if choice.0 in product_form.size_options.value %}checked{% endif %}>
+                            <label class="form-check-label" for="size_{{ choice.0 }}">
+                              {{ choice.1 }}
+                            </label>
+                          </div>
+                        {% endfor %}
+                      </div>
+                      {% if product_form.size_options.errors %}
+                        <div class="text-danger small mt-1">{{ product_form.size_options.errors }}</div>
+                      {% endif %}
+                    </div>
+                  </div>
+
+                  <!-- Service-specific fields -->
+                  <div class="service-specific-fields" {% if request.user.sellerprofile.business_type != 'service_provider' %}style="display: none;"{% endif %}>
+                    <div class="modern-form-group">
+                      <label class="modern-form-label">
+                        <i class="fas fa-money-check-alt modern-icon"></i>Pricing Type
+                      </label>
+                      {{ product_form.pricing_type|attr:"class:modern-form-control" }}
+                      {% if product_form.pricing_type.errors %}
+                        <div class="text-danger small mt-1">{{ product_form.pricing_type.errors }}</div>
+                      {% endif %}
+                    </div>
+                    
+                    <div class="modern-form-group">
+                      <label class="modern-form-label">
+                        <i class="fas fa-clock modern-icon"></i>Service Duration
+                      </label>
+                      {{ product_form.service_duration|attr:"class:modern-form-control"|attr:"placeholder:e.g., 2 hours, 1 day" }}
+                      {% if product_form.service_duration.errors %}
+                        <div class="text-danger small mt-1">{{ product_form.service_duration.errors }}</div>
+                      {% endif %}
+                      <div class="modern-form-text">e.g., 2 hours, 1 day, 30 minutes</div>
+                    </div>
+                    
+                    <div class="modern-form-group">
+                      <label class="modern-form-label">
+                        <i class="fas fa-map-marker-alt modern-icon"></i>Service Area
+                      </label>
+                      {{ product_form.service_area|attr:"class:modern-form-control"|attr:"placeholder:e.g., Addis Ababa, Specific locations" }}
+                      {% if product_form.service_area.errors %}
+                        <div class="text-danger small mt-1">{{ product_form.service_area.errors }}</div>
+                      {% endif %}
+                    </div>
+                  </div>
+
+                  <!-- Restaurant-specific fields -->
+                  <div class="restaurant-specific-fields" {% if request.user.sellerprofile.business_type != 'cafe_restaurant' %}style="display: none;"{% endif %}>
+                    <div class="modern-form-group">
+                      <label class="modern-form-label">
+                        <i class="fas fa-mortar-pestle modern-icon"></i>Ingredients
+                      </label>
+                      {{ product_form.ingredients|attr:"class:modern-form-control"|attr:"placeholder:List main ingredients" }}
+                      {% if product_form.ingredients.errors %}
+                        <div class="text-danger small mt-1">{{ product_form.ingredients.errors }}</div>
+                      {% endif %}
+                    </div>
+                    
+                    <div class="modern-form-group">
+                      <label class="modern-form-label">
+                        <i class="fas fa-stopwatch modern-icon"></i>Preparation Time
+                      </label>
+                      {{ product_form.preparation_time|attr:"class:modern-form-control"|attr:"placeholder:e.g., 15-20 minutes" }}
+                      {% if product_form.preparation_time.errors %}
+                        <div class="text-danger small mt-1">{{ product_form.preparation_time.errors }}</div>
+                      {% endif %}
+                    </div>
+
+                    <div class="modern-form-group">
+                      <label class="modern-form-label">
+                        <i class="fas fa-heart modern-icon"></i>Dietary Information
+                      </label>
+                      {{ product_form.dietary_info|attr:"class:modern-form-control"|attr:"rows:2"|attr:"placeholder:Dietary restrictions, allergens, etc." }}
+                      {% if product_form.dietary_info.errors %}
+                        <div class="text-danger small mt-1">{{ product_form.dietary_info.errors }}</div>
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Right Column - Common Fields -->
+              <div class="col-md-6">
+                <!-- Images Section - Simple Multiple File Upload -->
+                <div class="form-section modern-form-section mb-5">
+                  <div class="section-header modern-section-header d-flex align-items-center mb-4">
+                    <div class="modern-icon-circle bg-gradient-blue text-white me-3">
+                      <i class="fas fa-images"></i>
+                    </div>
+                    <div>
+                      <h6 class="mb-1 modern-section-title">
+                        {% if request.user.sellerprofile.business_type == 'product_seller' %}
+                          Product Images
+                        {% elif request.user.sellerprofile.business_type == 'service_provider' %}
+                          Service Images
+                        {% elif request.user.sellerprofile.business_type == 'cafe_restaurant' %}
+                          Menu Item Images
+                        {% endif %}
+                      </h6>
+                      <p class="mb-0 text-muted modern-section-subtitle">Upload high-quality images</p>
+                    </div>
+                  </div>
+                  
+                  <div class="modern-image-upload-container mb-4">
+                    <div class="modern-image-preview-container mb-4" id="image-preview-container">
+                      <div class="text-center p-5 border-dashed rounded-4 bg-light-blue" id="image-upload-placeholder">
+                        <i class="fas fa-cloud-upload-alt fa-3x text-blue mb-3"></i>
+                        <p class="mb-1 text-blue fw-medium">
+                          {% if request.user.sellerprofile.business_type == 'product_seller' %}
+                            Upload product images
+                          {% elif request.user.sellerprofile.business_type == 'service_provider' %}
+                            Upload service images
+                          {% elif request.user.sellerprofile.business_type == 'cafe_restaurant' %}
+                            Upload menu item images
+                          {% endif %}
+                        </p>
+                        <small class="text-blue">Drag & drop or click to browse (max 5 images)</small>
+                      </div>
+                    </div>
+                    
+                    <div class="modern-file-upload-wrapper position-relative">
+                      <label for="id_images" class="btn btn-gradient-blue w-100 modern-btn-upload">
+                        <i class="fas fa-cloud-upload-alt me-2"></i>
+                        {% if request.user.sellerprofile.business_type == 'product_seller' %}
+                          Select Product Images
+                        {% elif request.user.sellerprofile.business_type == 'service_provider' %}
+                          Select Service Images
+                        {% elif request.user.sellerprofile.business_type == 'cafe_restaurant' %}
+                          Select Menu Images
+                        {% endif %}
+                      </label>
+                        <input type="file" name="images" id="id_images" accept="image/*" multiple 
+                            style="position:absolute;left:0;top:0;opacity:0;width:100%;height:100%;cursor:pointer;">
+                          <div class="modern-form-text mt-2 text-center" id="images-counter">0/5 images selected</div>
+                          <div id="image-limit-msg" class="text-danger small text-center mt-1 d-none">Maximum 5 images reached</div>
+                    </div>
+                    
+                    <!-- Display form errors for images -->
+                    {% if product_form.images.errors %}
+                      <div class="alert alert-danger mt-2">
+                        {% for error in product_form.images.errors %}
+                          <small>{{ error }}</small>
+                        {% endfor %}
+                      </div>
+                    {% endif %}
+                  </div>
+                </div>
+
+                <!-- Availability & Delivery Options -->
+                <div class="form-section modern-form-section mb-5">
+                  <div class="section-header modern-section-header d-flex align-items-center mb-4">
+                    <div class="modern-icon-circle bg-gradient-blue text-white me-3">
+                      <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <div>
+                      <h6 class="mb-1 modern-section-title">Availability</h6>
+                      <p class="mb-0 text-muted modern-section-subtitle">Set availability options</p>
+                    </div>
+                  </div>
+                  
+                  <div class="modern-form-group">
+                    <label class="modern-form-label">
+                      <i class="fas fa-clock modern-icon"></i>Current Availability
+                    </label>
+                    <div class="modern-availability-options">
+                      <div class="modern-form-check mb-3">
+                        {{ product_form.available_now|attr:"class:form-check-input" }}
+                        <label class="form-check-label fw-medium" for="{{ product_form.available_now.id_for_label }}">
+                          {% if request.user.sellerprofile.business_type == 'service_provider' %}
+                            Available for Booking
+                          {% else %}
+                            Available Now
+                          {% endif %}
+                        </label>
+                      </div>
+                      <div class="modern-form-check">
+                        {{ product_form.availability_schedule|attr:"class:form-check-input" }}
+                        <label class="form-check-label fw-medium" for="{{ product_form.availability_schedule.id_for_label }}">
+                          Schedule Required
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Delivery Options -->
+                  <div class="delivery-section">
+                    <div class="modern-form-group">
+                      <div class="modern-form-check form-switch">
+                        {{ product_form.free_delivery|attr:"class:form-check-input" }}
+                        <label class="form-check-label fw-medium" for="{{ product_form.free_delivery.id_for_label }}">
+                          <i class="fas fa-truck modern-icon me-2"></i>Free Delivery Available
+                        </label>
+                      </div>
+                    </div>
+                    
+                    <div class="modern-form-group delivery-conditions" 
+                         {% if not product_form.free_delivery.value %}style="display: none;"{% endif %}>
+                      <label class="modern-form-label">
+                        <i class="fas fa-info-circle modern-icon"></i>Delivery Conditions
+                      </label>
+                      {{ product_form.delivery_conditions|attr:"class:modern-form-control"|attr:"placeholder:e.g., For orders above 500 Birr, Within 10km radius" }}
+                      {% if product_form.delivery_conditions.errors %}
+                        <div class="text-danger small mt-1">{{ product_form.delivery_conditions.errors }}</div>
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Business Info Card -->
+                <div class="form-section modern-form-section">
+                  <div class="modern-business-card p-4 rounded-4">
+                    <div class="d-flex align-items-center mb-3">
+                      <div class="modern-business-icon me-3">
+                        {% if request.user.sellerprofile.business_type == 'product_seller' %}
+                          <i class="fas fa-shopping-bag fa-2x text-white bg-gradient-blue rounded-3 p-3"></i>
+                        {% elif request.user.sellerprofile.business_type == 'cafe_restaurant' %}
+                          <i class="fas fa-utensils fa-2x text-white bg-gradient-blue rounded-3 p-3"></i>
+                        {% elif request.user.sellerprofile.business_type == 'service_provider' %}
+                          <i class="fas fa-tools fa-2x text-white bg-gradient-blue rounded-3 p-3"></i>
+                        {% endif %}
+                      </div>
+                      <div>
+                        <h6 class="mb-1 fw-bold text-dark">{{ request.user.sellerprofile.company_name }}</h6>
+                        <small class="text-muted">
+                          {% if request.user.sellerprofile.business_type == 'product_seller' %}
+                            Product Store
+                          {% elif request.user.sellerprofile.business_type == 'cafe_restaurant' %}
+                            Cafe & Restaurant
+                          {% elif request.user.sellerprofile.business_type == 'service_provider' %}
+                            Service Provider
+                          {% endif %}
+                        </small>
+                      </div>
+                    </div>
+                    <div class="text-center mt-3">
+                      <small class="text-blue fw-medium">
+                        Items will be listed under your business profile
+                      </small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Submit and Cancel Buttons -->
+            <div class="d-flex justify-content-between border-top pt-4 mt-4">
+              <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary px-5 py-3 modern-cancel-btn">
+                <i class="fas fa-times me-2"></i>
+                Cancel
+              </a>
+              <button type="submit" class="btn btn-gradient-blue px-5 py-3 modern-submit-btn">
+                <i class="fas fa-plus-circle me-2"></i>
+                {% if request.user.sellerprofile.business_type == 'product_seller' %}
+                  Add Product
+                {% elif request.user.sellerprofile.business_type == 'service_provider' %}
+                  Add Service
+                {% elif request.user.sellerprofile.business_type == 'cafe_restaurant' %}
+                  Add Menu Item
+                {% endif %}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<script>
+<!-- Cropper.js CDN -->
+</script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css" crossorigin="anonymous" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js" crossorigin="anonymous"></script>
+<!-- Cropping Modal -->
+<div id="cropper-modal" class="eg-cropper-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:9999; align-items:center; justify-content:center; padding:1rem;">
+  <div class="cropper-wrapper bg-white p-3 rounded shadow" style="width:92vw; max-width:640px; max-height:85vh; overflow:auto;">
+    <h5 class="mb-2">Crop Image <small class="text-muted" id="cropper-filename"></small></h5>
+    <div class="d-flex flex-wrap gap-3" style="align-items:flex-start;">
+      <div class="cropper-stage flex-grow-1" style="min-width:240px; flex:1 1 260px; max-width:420px; max-height:50vh; overflow:hidden;">
+        <img id="cropper-image" alt="Crop image" style="max-width:100%; max-height:50vh;" />
+      </div>
+      <div class="cropper-toolbox" style="min-width:220px; flex:0 0 220px; max-height:50vh; overflow-y:auto;">
+        <div class="mb-2"><strong>Aspect Ratio</strong></div>
+        <div class="btn-group mb-3" role="group">
+          <button type="button" class="btn btn-sm btn-outline-primary ratio-btn active" data-ratio="1">1:1</button>
+          <button type="button" class="btn btn-sm btn-outline-primary ratio-btn" data-ratio="4/3">4:3</button>
+          <button type="button" class="btn btn-sm btn-outline-primary ratio-btn" data-ratio="16/9">16:9</button>
+          <button type="button" class="btn btn-sm btn-outline-primary ratio-btn" data-ratio="free">Free</button>
+        </div>
+        <div class="mb-2"><strong>Adjust</strong></div>
+        <div class="d-flex flex-wrap gap-2 mb-3">
+          <button type="button" class="btn btn-sm btn-outline-secondary crop-action" data-action="rotate-left">⟲</button>
+          <button type="button" class="btn btn-sm btn-outline-secondary crop-action" data-action="rotate-right">⟳</button>
+          <button type="button" class="btn btn-sm btn-outline-secondary crop-action" data-action="zoom-in">＋</button>
+          <button type="button" class="btn btn-sm btn-outline-secondary crop-action" data-action="zoom-out">－</button>
+          <button type="button" class="btn btn-sm btn-outline-secondary crop-action" data-action="reset">Reset</button>
+          <button type="button" class="btn btn-sm btn-outline-warning" id="cropper-skip">Skip</button>
+        </div>
+        <div class="mb-2"><strong>Output Size</strong></div>
+        <div class="input-group mb-3">
+          <span class="input-group-text">Max px</span>
+          <select id="cropper-size" class="form-select form-select-sm">
+            <option value="600" selected>600</option>
+            <option value="800">800</option>
+            <option value="1200">1200</option>
+          </select>
+        </div>
+        <div class="form-check form-switch mb-3">
+          <input class="form-check-input" type="checkbox" id="cropper-jpeg" checked>
+          <label class="form-check-label" for="cropper-jpeg">Convert to JPEG</label>
+        </div>
+        <div class="mb-2"><strong>Quality</strong></div>
+        <input type="range" min="50" max="90" step="5" value="80" id="cropper-quality" class="form-range" />
+        <div class="small text-muted" id="cropper-quality-label">JPEG quality: 80%</div>
+      </div>
+    </div>
+    <div class="cropper-actions mt-3 d-flex justify-content-end gap-2">
+      <button type="button" id="cropper-cancel" class="btn btn-outline-secondary">Cancel</button>
+      <button type="button" id="cropper-save" class="btn btn-primary">Save Crop</button>
+    </div>
+  </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Show warning message if seller profile is incomplete
+  if ("{{ request.user.sellerprofile.company_name }}" === "") {
+    document.getElementById('seller-profile-message').classList.remove('d-none');
+  }
+
+  // Multi-image upload with cropping
+  const imageInput = document.getElementById('id_images');
+  const previewContainer = document.getElementById('image-preview-container');
+  const placeholder = document.getElementById('image-upload-placeholder');
+  const counterText = document.getElementById('images-counter');
+  const limitMsg = document.getElementById('image-limit-msg');
+  let images = [];
+  let pendingFiles = [];
+  let cropper = null;
+  let originals = []; // store original File objects parallel to images
+  let currentWorkingFile = null; // the file currently being cropped/handled
+  const MAX_IMAGES = 5;
+
+  function updatePreview() {
+    previewContainer.innerHTML = '';
+    if (images.length === 0) {
+      previewContainer.appendChild(placeholder);
+      placeholder.style.display = 'block';
+      return;
+    }
+    
+    images.forEach((file, idx) => {
+      if (!file) return; // safety guard
+      const div = document.createElement('div');
+      div.className = 'modern-preview-item';
+      div.draggable = true;
+      div.setAttribute('data-idx', idx);
+      
+      const img = document.createElement('img');
+      img.src = URL.createObjectURL(file);
+      img.alt = 'Product Image';
+      img.onload = function() { URL.revokeObjectURL(img.src); };
+      
+      const removeBtn = document.createElement('span');
+      removeBtn.className = 'modern-remove-btn';
+      removeBtn.innerHTML = '&times;';
+      removeBtn.title = 'Remove image';
+      // Re-crop button overlay
+      const recropBtn = document.createElement('span');
+      recropBtn.className = 'modern-recrop-btn';
+      recropBtn.title = 'Re-crop image';
+      recropBtn.innerHTML = '<i class="fas fa-crop"></i>';
+      recropBtn.onclick = function(e){
+        e.stopPropagation();
+        openCropper(originals[idx] || images[idx], idx); // pass index for replacement
+      };
+
+      removeBtn.onclick = function(e) {
+        e.stopPropagation();
+        images.splice(idx, 1);
+        originals.splice(idx,1);
+        syncInputFiles();
+        updatePreview();
+      };
+      
+      div.appendChild(img);
+      div.appendChild(removeBtn);
+      div.appendChild(recropBtn);
+      
+      // Drag events for reordering
+      setupDragEvents(div, idx);
+      
+      previewContainer.appendChild(div);
+    });
+    placeholder.style.display = 'none';
+  }
+
+  function setupDragEvents(div, idx) {
+    div.addEventListener('dragstart', function(e) {
+      e.dataTransfer.setData('text/plain', idx);
+      div.classList.add('dragging');
+    });
+    
+    div.addEventListener('dragend', function() {
+      div.classList.remove('dragging');
+    });
+    
+    div.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      div.classList.add('dragover');
+    });
+    
+    div.addEventListener('dragleave', function() {
+      div.classList.remove('dragover');
+    });
+    
+    div.addEventListener('drop', function(e) {
+      e.preventDefault();
+      div.classList.remove('dragover');
+      const fromIdx = parseInt(e.dataTransfer.getData('text/plain'));
+      if (fromIdx !== idx) {
+        const movedImg = images.splice(fromIdx, 1)[0];
+        const movedOrig = originals.splice(fromIdx, 1)[0];
+        images.splice(idx, 0, movedImg);
+        originals.splice(idx, 0, movedOrig);
+        syncInputFiles();
+        updatePreview();
+      }
+    });
+  }
+
+  function syncInputFiles() {
+    const dataTransfer = new DataTransfer();
+    images.forEach(f => dataTransfer.items.add(f));
+    imageInput.files = dataTransfer.files;
+    updateCounter();
+  }
+
+  function updateCounter() {
+    if (counterText) {
+      counterText.textContent = `${images.length}/${MAX_IMAGES} images selected`;
+    }
+    if (limitMsg) {
+      if (images.length >= MAX_IMAGES) {
+        limitMsg.classList.remove('d-none');
+      } else {
+        limitMsg.classList.add('d-none');
+      }
+    }
+  }
+
+  function showLimitMessage() {
+    if (!limitMsg) return;
+    limitMsg.textContent = 'You can upload up to 5 images.';
+    limitMsg.classList.remove('d-none');
+    setTimeout(() => {
+      if (images.length < MAX_IMAGES) {
+        limitMsg.classList.add('d-none');
+      }
+    }, 2500);
+  }
+
+  // Cropper modal elements
+  const cropModal = document.getElementById('cropper-modal');
+  const cropImage = document.getElementById('cropper-image');
+  const cropSaveBtn = document.getElementById('cropper-save');
+  const cropCancelBtn = document.getElementById('cropper-cancel');
+  const sizeSelect = document.getElementById('cropper-size');
+  const jpegToggle = document.getElementById('cropper-jpeg');
+  const qualityField = document.getElementById('cropper-quality');
+  const qualityLabel = document.getElementById('cropper-quality-label');
+
+  qualityField?.addEventListener('input', () => {
+    qualityLabel.textContent = `JPEG quality: ${qualityField.value}%`;
+  });
+
+  function openCropper(file, replaceIndex=null) {
+    const url = URL.createObjectURL(file);
+    cropImage.src = url;
+    if (cropper) { cropper.destroy(); }
+    cropper = new Cropper(cropImage, { aspectRatio: 1, viewMode:1, autoCropArea:1, responsive:true, background:false });
+    cropModal.style.display = 'flex';
+    cropModal.dataset.replaceIndex = replaceIndex !== null ? replaceIndex : '';
+    currentWorkingFile = file;
+    document.getElementById('cropper-filename').textContent = file.name;
+  }
+
+  function closeCropper() {
+    cropModal.style.display = 'none';
+    if (cropper) { cropper.destroy(); cropper = null; }
+    cropImage.src = '';
+  }
+
+  function processNextFile() {
+    if (images.length >= MAX_IMAGES) {
+      pendingFiles = [];
+      syncInputFiles();
+      updatePreview();
+      showLimitMessage();
+      return;
+    }
+    const file = pendingFiles.shift();
+    if (!file) { syncInputFiles(); updatePreview(); return; }
+    openCropper(file);
+  }
+
+  // Aspect ratio buttons
+  document.querySelectorAll('.ratio-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.ratio-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      const val = btn.dataset.ratio;
+      if (!cropper) return;
+      if (val === 'free') { cropper.setAspectRatio(NaN); }
+      else { cropper.setAspectRatio(eval(val)); }
+    });
+  });
+
+  // Toolbox actions
+  document.querySelectorAll('.crop-action').forEach(actBtn => {
+    actBtn.addEventListener('click', () => {
+      if (!cropper) return;
+      const action = actBtn.dataset.action;
+      switch(action){
+        case 'rotate-left': cropper.rotate(-90); break;
+        case 'rotate-right': cropper.rotate(90); break;
+        case 'zoom-in': cropper.zoom(0.1); break;
+        case 'zoom-out': cropper.zoom(-0.1); break;
+        case 'reset': cropper.reset(); break;
+      }
+    });
+  });
+
+  document.getElementById('cropper-skip')?.addEventListener('click', () => {
+    // Add file as-is
+    const replaceIdx = cropModal.dataset.replaceIndex !== '' ? parseInt(cropModal.dataset.replaceIndex) : null;
+    const fileToAdd = currentWorkingFile;
+    if (replaceIdx !== null) {
+      images[replaceIdx] = fileToAdd;
+      originals[replaceIdx] = fileToAdd;
+    } else {
+      images.push(fileToAdd);
+      originals.push(fileToAdd);
+    }
+    syncInputFiles();
+    updatePreview();
+    closeCropper();
+    processNextFile();
+  });
+
+  cropSaveBtn?.addEventListener('click', () => {
+    if (!cropper) return;
+    const replaceIdx = cropModal.dataset.replaceIndex !== '' ? parseInt(cropModal.dataset.replaceIndex) : null;
+    const maxW = parseInt(sizeSelect?.value || '600', 10);
+    const quality = Math.min(1, Math.max(0.4, (parseInt(qualityField?.value)||80)/100));
+    const originalFile = replaceIdx !== null ? (originals[replaceIdx] || images[replaceIdx]) : currentWorkingFile;
+    const extMatch = originalFile.name.match(/\.([a-zA-Z0-9]+)$/);
+    const origExt = extMatch ? extMatch[1].toLowerCase() : 'jpg';
+    // Decide output format: prefer JPEG if toggled, else keep PNG when original is PNG
+    const forceJpeg = jpegToggle?.checked === true;
+    const mime = forceJpeg ? 'image/jpeg' : (origExt === 'png' ? 'image/png' : 'image/jpeg');
+    cropper.getCroppedCanvas({ width: maxW, fillColor: '#ffffff' }).toBlob(blob => {
+      const baseName = originalFile.name.replace(/\.[^\.]+$/, '');
+      const newName = `${baseName}_c${maxW}.` + (mime==='image/png'?'png':'jpg');
+      const croppedFile = new File([blob], newName, {type: mime});
+      if (replaceIdx !== null) {
+        images[replaceIdx] = croppedFile;
+        originals[replaceIdx] = originalFile; // keep original for future re-crop
+      } else {
+        images.push(croppedFile);
+        originals.push(originalFile);
+      }
+      syncInputFiles();
+      updatePreview();
+      closeCropper();
+      processNextFile();
+    }, mime, mime==='image/jpeg'?quality:undefined);
+  });
+
+  cropCancelBtn?.addEventListener('click', () => {
+    // Abort entire pending sequence
+    pendingFiles = [];
+    closeCropper();
+    syncInputFiles();
+    updatePreview();
+  });
+
+  // File input change handler with cropping
+  imageInput.addEventListener('change', function(e) {
+    const newFiles = Array.from(e.target.files).filter(f => f.type.startsWith('image/'));
+    if (!newFiles.length) { imageInput.value=''; return; }
+    const remaining = MAX_IMAGES - images.length;
+    if (remaining <= 0) { imageInput.value=''; showLimitMessage(); return; }
+    pendingFiles = newFiles.slice(0, remaining);
+    processNextFile();
+    imageInput.value = '';
+  });
+
+  // Drag and drop functionality
+  previewContainer.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    previewContainer.classList.add('dragover');
+  });
+
+  previewContainer.addEventListener('dragleave', function() {
+    previewContainer.classList.remove('dragover');
+  });
+
+  previewContainer.addEventListener('drop', function(e) {
+    e.preventDefault();
+    previewContainer.classList.remove('dragover');
+    const files = Array.from(e.dataTransfer.files);
+    
+    if (files.length > 0) {
+      if (images.length >= MAX_IMAGES) { showLimitMessage(); return; }
+      const imageFiles = files.filter(file => file.type.startsWith('image/'));
+      
+      const remaining = MAX_IMAGES - images.length;
+      pendingFiles = imageFiles.slice(0, remaining);
+      processNextFile();
+    }
+  });
+
+  // Click to open file dialog
+  previewContainer.addEventListener('click', function(e) {
+    if (!e.target.classList.contains('modern-remove-btn')) {
+      if (images.length < MAX_IMAGES) imageInput.click();
+    }
+  });
+
+  // Free delivery toggle
+  const freeDeliveryCheckbox = document.querySelector('#{{ product_form.free_delivery.id_for_label }}');
+  const deliveryConditions = document.querySelector('.delivery-conditions');
+  
+  if (freeDeliveryCheckbox && deliveryConditions) {
+    freeDeliveryCheckbox.addEventListener('change', function() {
+      deliveryConditions.style.display = this.checked ? 'block' : 'none';
+    });
+  }
+
+  // Form validation
+  const form = document.getElementById('product-form');
+  if (form) {
+    form.addEventListener('submit', function(e) {
+      const requiredFields = form.querySelectorAll('[required]');
+      let isValid = true;
+      
+      requiredFields.forEach(field => {
+        if (!field.value.trim()) {
+          isValid = false;
+          field.classList.add('is-invalid');
+        } else {
+          field.classList.remove('is-invalid');
+        }
+      });
+      
+      // Check if at least one image is uploaded
+      if (images.length === 0) {
+        isValid = false;
+        const imageField = document.getElementById('id_images');
+        imageField.classList.add('is-invalid');
+      } else {
+        const imageField = document.getElementById('id_images');
+        imageField.classList.remove('is-invalid');
+      }
+      
+      if (!isValid) {
+        e.preventDefault();
+        const firstError = form.querySelector('.is-invalid');
+        if (firstError) {
+          firstError.scrollIntoView({behavior: 'smooth', block: 'center'});
+        }
+      }
+    });
+  }
+
+  // Auto-dismiss Django success messages
+  const djangoMessages = document.getElementById('django-messages-container');
+  if (djangoMessages) {
+    setTimeout(function() {
+      const alerts = djangoMessages.querySelectorAll('.alert');
+      alerts.forEach(function(alert) {
+        const bsAlert = new bootstrap.Alert(alert);
+        bsAlert.close();
+      });
+    }, 5000);
+  }
+
+  // Confirm cancel action
+  const cancelButton = document.querySelector('.modern-cancel-btn');
+  if (cancelButton) {
+    cancelButton.addEventListener('click', function(e) {
+      if (images.length > 0 || formHasData()) {
+        const confirmCancel = confirm('Are you sure you want to cancel? All unsaved changes will be lost.');
+        if (!confirmCancel) {
+          e.preventDefault();
+        }
+      }
+    });
+  }
+
+  // Check if form has data
+  function formHasData() {
+    const inputs = form.querySelectorAll('input, textarea, select');
+    for (let input of inputs) {
+      if (input.value && input.type !== 'file' && input.name !== 'csrfmiddlewaretoken') {
+        return true;
+      }
+    }
+    return false;
+  }
+});
+</script>
+
+<style>
+:root {
+  --primary-blue: #4A90E2;
+  --light-blue: #E3F2FD;
+  --dark-blue: #1565C0;
+  --accent-blue: #64B5F6;
+  --gradient-blue: linear-gradient(135deg, #4A90E2 0%, #1565C0 100%);
+  --gradient-light: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%);
+  --text-dark: #2D3748;
+  --text-light: #718096;
+  --white: #FFFFFF;
+  --card-shadow: 0 8px 30px rgba(74, 144, 226, 0.12);
+  --hover-shadow: 0 12px 40px rgba(74, 144, 226, 0.15);
+}
+
+/* Cropper.js overlay: show full image (no dim area) */
+.cropper-container .cropper-modal {
+  background-color: transparent !important;
+}
+/* Keep crop box visible with a subtle outline */
+.cropper-container .cropper-view-box {
+  outline: 2px solid rgba(74, 144, 226, 0.8);
+  outline-offset: 0;
+}
+.cropper-container .cropper-dashed {
+  opacity: 0.35;
+}
+
+/* Modern Card Styles */
+.modern-card {
+  background: var(--white);
+  border-radius: 20px;
+  box-shadow: var(--card-shadow);
+  border: 1px solid rgba(74, 144, 226, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+.modern-card .card-body {
+  padding: 3rem;
+}
+
+/* Modern Form Sections */
+.modern-form-section {
+  background: var(--white);
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: var(--card-shadow);
+  border: 1px solid rgba(74, 144, 226, 0.1);
+  transition: all 0.3s ease;
+}
+
+.modern-form-section:hover {
+  box-shadow: var(--hover-shadow);
+  transform: translateY(-2px);
+}
+
+.modern-section-header {
+  padding-bottom: 1.5rem;
+  border-bottom: 2px solid var(--light-blue);
+  margin-bottom: 2rem;
+}
+
+.modern-section-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 0.25rem;
+}
+
+.modern-section-subtitle {
+  font-size: 0.9rem;
+  color: var(--text-light);
+}
+
+.modern-icon-circle {
+  width: 50px;
+  height: 50px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  background: var(--gradient-blue);
+  box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
+}
+
+/* Modern Form Elements */
+.modern-form-group {
+  margin-bottom: 2rem;
+  position: relative;
+}
+
+.modern-form-label {
+  font-weight: 600;
+  color: var(--text-dark);
+  margin-bottom: 0.75rem;
+  display: block;
+  font-size: 0.95rem;
+}
+
+.modern-icon {
+  color: var(--primary-blue);
+  width: 20px;
+  text-align: center;
+  margin-right: 0.5rem;
+}
+
+.modern-form-control {
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  border: 2px solid #e8f0fe;
+  font-size: 15px;
+  transition: all 0.3s ease;
+  background: #f8fbff;
+  width: 100%;
+}
+
+.modern-form-control:focus {
+  border-color: var(--primary-blue);
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.1);
+  background: var(--white);
+  transform: translateY(-1px);
+}
+
+.modern-form-text {
+  font-size: 0.85rem;
+  color: var(--text-light);
+  margin-top: 0.5rem;
+}
+
+/* Modern Checkboxes and Switches */
+.modern-form-check {
+  margin-bottom: 1rem;
+}
+
+.modern-form-check .form-check-input {
+  border-radius: 6px;
+  border: 2px solid #e8f0fe;
+}
+
+.modern-form-check .form-check-input:checked {
+  background-color: var(--primary-blue);
+  border-color: var(--primary-blue);
+}
+
+.modern-form-check .form-check-input:focus {
+  box-shadow: 0 0 0 0.25rem rgba(74, 144, 226, 0.25);
+}
+
+/* Modern Image Upload */
+.modern-image-upload-container {
+  position: relative;
+}
+
+.modern-image-preview-container {
+  min-height: 280px;
+  border: 2px dashed var(--accent-blue);
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--gradient-light);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.modern-image-preview-container.dragover {
+  background: rgba(74, 144, 226, 0.1);
+  border-color: var(--primary-blue);
+}
+
+.border-dashed {
+  border-style: dashed;
+}
+
+.bg-light-blue {
+  background: var(--light-blue) !important;
+}
+
+.text-blue {
+  color: var(--primary-blue) !important;
+}
+
+.modern-preview-item {
+  position: relative;
+  width: 160px;
+  height: 160px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(74, 144, 226, 0.2);
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--white);
+  transition: all 0.3s ease;
+}
+
+.modern-preview-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(74, 144, 226, 0.3);
+}
+
+.modern-preview-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+.modern-remove-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  background: rgba(231, 74, 59, 0.9);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.modern-preview-item:hover .modern-remove-btn {
+  opacity: 1;
+}
+
+/* Re-crop button overlay */
+.modern-recrop-btn {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  opacity: 0;
+  transition: all 0.3s ease;
+  z-index: 2;
+}
+
+.modern-preview-item:hover .modern-recrop-btn {
+  opacity: 1;
+}
+
+.modern-preview-item.dragging {
+  opacity: 0.5;
+  transform: scale(0.95);
+}
+
+.modern-preview-item.dragover {
+  border: 2px dashed var(--primary-blue);
+  background: rgba(74, 144, 226, 0.1);
+}
+
+.modern-file-upload-wrapper {
+  position: relative;
+  overflow: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+/* Modern Buttons */
+.btn-gradient-blue {
+  background: var(--gradient-blue);
+  border: none;
+  border-radius: 12px;
+  padding: 1rem 2rem;
+  font-weight: 600;
+  font-size: 16px;
+  color: white;
+  box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-gradient-blue::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s;
+}
+
+.btn-gradient-blue:hover::before {
+  left: 100%;
+}
+
+.btn-gradient-blue:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(74, 144, 226, 0.4);
+  color: white;
+}
+
+.modern-btn-upload {
+  border-radius: 12px;
+  font-weight: 600;
+  padding: 1rem 1.5rem;
+  transition: all 0.3s ease;
+  background: var(--white);
+  border: 2px solid var(--primary-blue);
+  color: var(--primary-blue);
+  font-size: 16px;
+}
+
+.modern-btn-upload:hover {
+  background: var(--primary-blue);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
+}
+
+.modern-submit-btn {
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 1.1rem;
+  padding: 1rem 2.5rem;
+  box-shadow: 0 6px 20px rgba(74, 144, 226, 0.4);
+}
+
+.modern-cancel-btn {
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 1.1rem;
+  padding: 1rem 2.5rem;
+  border: 2px solid #6c757d;
+  color: #6c757d;
+  transition: all 0.3s ease;
+}
+
+.modern-cancel-btn:hover {
+  background: #6c757d;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
+}
+
+/* Modern Business Card */
+.modern-business-card {
+  background: var(--gradient-light);
+  border: 1px solid rgba(74, 144, 226, 0.2);
+  box-shadow: 0 4px 15px rgba(74, 144, 226, 0.1);
+}
+
+.modern-business-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Size Options */
+.modern-size-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.modern-size-options .form-check-inline {
+  margin-right: 0;
+}
+
+.modern-size-options .form-check-label {
+  font-weight: 500;
+  color: var(--text-dark);
+}
+
+/* Availability Options */
+.modern-availability-options .form-check-label {
+  font-weight: 500;
+  color: var(--text-dark);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .modern-card .card-body {
+    padding: 2rem 1.5rem;
+  }
+  
+  .modern-form-section {
+    padding: 1.5rem;
+  }
+  
+  .modern-section-header {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .modern-icon-circle {
+    margin-bottom: 1rem;
+    margin-right: 0;
+  }
+  
+  .modern-size-options {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .modern-preview-item {
+    width: 140px;
+    height: 140px;
+  }
+  
+  /* Stack buttons on mobile */
+  .d-flex.justify-content-between {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .modern-cancel-btn,
+  .modern-submit-btn {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+@media (max-width: 576px) {
+  .modern-card .card-body {
+    padding: 1.5rem 1rem;
+  }
+  
+  .modern-form-section {
+    padding: 1rem;
+  }
+  
+  .modern-preview-item {
+    width: 120px;
+    height: 120px;
+  }
+}
+
+/* Animation for form sections */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modern-form-section {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+/* Success message styling */
+.alert-success {
+  border-radius: 12px;
+  border: none;
+  background: var(--gradient-blue);
+  color: white;
+  box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
+}
+
+.alert-warning {
+  border-radius: 12px;
+  border: none;
+  box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
+}
+
+.alert-error {
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+}
+
+/* Form validation styles */
+.is-invalid {
+  border-color: #dc3545 !important;
+}
+
+.is-invalid:focus {
+  box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25) !important;
+}
+</style>
+{% endblock %}

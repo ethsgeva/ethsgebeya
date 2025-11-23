@@ -1,0 +1,338 @@
+{% extends 'ethsgebeya/public_base.html' %}
+{% load static %}
+{% load rating_tags %}
+
+{% block content %}
+<div class="product-list-bg py-4" style="min-height:100vh; width:100vw; max-width:100vw; margin:0; padding:0; background: linear-gradient(135deg, #FFFcfb 60%, #FFD8D8 100%); position:relative; overflow-x:hidden;">
+  <div class="container py-4 position-relative" style="z-index:2;">
+    <h1 class="mb-4 fw-bold display-5 text-center" style="color:#093FB4;letter-spacing:1px;">Browse <span style="color:#ED3500;">Products</span></h1>
+    <form method="get" class="mb-4">
+      <div class="row justify-content-center">
+        <div class="col-12 col-lg-8 neumorphic-search-container">
+          <div class="search-bar-blue d-flex flex-wrap align-items-center gap-2 p-3 rounded shadow" style="background: #e0e5ec !important;">
+            <div class="flex-grow-1 d-flex align-items-center gap-2">
+              {{ form.q }}
+            </div>
+            <div class="flex-grow-1 d-flex align-items-center gap-2">
+              <i class="fas fa-list text-white"></i>
+              {{ form.category }}
+            </div>
+            <button type="submit" class="search-btn-blue ms-2" style="padding: 1rem 2rem; font-size: 1.2rem; font-weight: 700; color: #fff; background: #224abe; border: none; border-radius: 12px; cursor: pointer; transition: all 0.2s; box-shadow: 5px 5px 10px #1a3570, -5px -5px 10px #3a5be0; display: flex; align-items: center; justify-content: center; min-width: 56px; min-height: 56px;">
+            <i class="fas fa-filter"></i>
+          </button>
+          </div>
+        </div>
+      </div>
+    </form>
+    <div class="row">
+      {% for product in products %}
+        <div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-4 animate-fadein">
+          <div class="product-card h-100">
+            <!-- HERO -->
+            <div class="pc-hero">
+              <div class="pc-hero-top d-flex justify-content-between align-items-start">
+                <span class="pc-badge">
+                  {% if product.is_new %}NEW{% elif product.is_popular %}HOT{% else %}ITEM{% endif %}
+                </span>
+                <div class="pc-heart-wrap">
+                  {% if user.is_authenticated and user.profile.role == 'buyer' %}
+                    {% with wishlist=user.wishlists.first %}
+                      {% if wishlist and product in wishlist.products.all %}
+                        <form method="post" action="{% url 'remove_from_wishlist' %}" class="pc-heart-form">{% csrf_token %}
+                          <input type="hidden" name="product_id" value="{{ product.id }}">
+                          <button type="submit" class="pc-heart active" title="Remove from Wishlist">
+                            <i class="fas fa-heart"></i>
+                          </button>
+                        </form>
+                      {% else %}
+                        <form method="post" action="{% url 'add_to_wishlist' %}" class="pc-heart-form">{% csrf_token %}
+                          <input type="hidden" name="product_id" value="{{ product.id }}">
+                          <button type="submit" class="pc-heart" title="Add to Wishlist">
+                            <i class="far fa-heart"></i>
+                          </button>
+                        </form>
+                      {% endif %}
+                    {% endwith %}
+                  {% else %}
+                    <span class="pc-heart disabled" title="Sign in as buyer to save"><i class="far fa-heart"></i></span>
+                  {% endif %}
+                </div>
+              </div>
+              {% if product.images.first %}
+                <img src="{{ product.images.first.image.url }}" alt="{{ product.title }}" class="pc-hero-img"/>
+              {% else %}
+                <img src="{% static 'img/no-image.png' %}" alt="No image" class="pc-hero-img"/>
+              {% endif %}
+            </div>
+
+            <!-- BODY -->
+            <div class="pc-body d-flex flex-column">
+              <h5 class="pc-name">
+                <a class="pc-name-link" href="{% url 'product_detail' product.id %}" aria-label="View details of {{ product.title }}">{{ product.title }}</a>
+              </h5>
+              <div class="pc-rating align-items-center d-flex gap-2">
+                {% with avg=product.get_average_rating %}
+                  {% rating_breakdown avg as rb %}
+                  <div class="pc-stars text-warning" aria-label="Rating {{ avg|fmt_avg }}/5">
+                    {% for _ in rb.full|times %}<i class="fas fa-star"></i>{% endfor %}
+                    {% for _ in rb.half|times %}<i class="fas fa-star-half-alt"></i>{% endfor %}
+                    {% for _ in rb.empty|times %}<i class="far fa-star"></i>{% endfor %}
+                  </div>
+                  <small class="text-muted">{{ avg|fmt_avg }} ({{ product.reviews.count }} reviews)</small>
+                {% endwith %}
+              </div>
+
+              <div class="pc-price-cta mt-3 d-flex align-items-center justify-content-between gap-2">
+                <div class="pc-price">{{ product.price }} <span>ETB</span></div>
+                {% if user.is_authenticated and user.profile.role == 'buyer' %}
+                  <form method="post" action="{% url 'cart_add' product.id %}" class="m-0">{% csrf_token %}
+                    <input type="hidden" name="product_id" value="{{ product.id }}">
+                    <button type="submit" class="pc-btn">
+                      <i class="fas fa-shopping-cart me-2"></i> Add to Cart
+                    </button>
+                  </form>
+                {% elif user.is_authenticated %}
+                  <button class="pc-btn disabled" disabled title="Switch to buyer role to add to cart">Buyer only</button>
+                {% else %}
+                  <a href="{% url 'sign-in' %}" class="pc-btn text-decoration-none">Sign in to buy</a>
+                {% endif %}
+              </div>
+
+              <div class="pc-meta d-flex justify-content-between align-items-center mt-3">
+                <div class="d-flex align-items-center gap-2 text-muted">
+                  <i class="fas fa-store"></i>
+                  <a class="truncate text-decoration-none" href="{% url 'seller_profile' product.seller.id %}">{{ product.seller.company_name|default:"Ethiopian Artisans" }}</a>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                  <span class="pc-dot {% if product.in_stock %}in{% else %}out{% endif %}"></span>
+                  <span class="{% if product.in_stock %}text-success{% else %}text-danger{% endif %}">{% if product.in_stock %}In Stock{% else %}Out of Stock{% endif %}</span>
+                </div>
+              </div>
+
+              <div class="pc-footer-actions d-flex flex-column gap-2 text-muted mt-3">
+                <div class="d-flex justify-content-around">
+                  <a class="pc-foot-link pc-share text-decoration-none"
+                     href="#"
+                     data-url="{{ request.scheme }}://{{ request.get_host }}{% url 'product_detail' product.id %}"
+                     data-title="{{ product.title }}"
+                     data-target="share-{{ product.id }}">
+                    <i class="fas fa-share-alt"></i>
+                    <span>Share</span>
+                  </a>
+                  <a class="pc-foot-link pc-ask text-decoration-none" href="#" data-target="ask-{{ product.id }}" title="Ask">
+                    <i class="far fa-question-circle"></i>
+                    <span>Ask</span>
+                  </a>
+                </div>
+                <!-- share menu (fallback) -->
+                <div class="pc-share-menu" id="share-{{ product.id }}" hidden>
+                  <a data-service="whatsapp" target="_blank" rel="noopener" class="share-item"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+                  <a data-service="telegram" target="_blank" rel="noopener" class="share-item"><i class="fab fa-telegram"></i> Telegram</a>
+                  <a data-service="facebook" target="_blank" rel="noopener" class="share-item"><i class="fab fa-facebook"></i> Facebook</a>
+                  <a data-service="twitter" target="_blank" rel="noopener" class="share-item"><i class="fab fa-x-twitter"></i> X</a>
+                  <a data-service="email" class="share-item"><i class="far fa-envelope"></i> Email</a>
+                  <button type="button" data-service="copy" class="share-item as-button"><i class="far fa-copy"></i> Copy Link</button>
+                </div>
+                <!-- ask message (appears on click) -->
+                <div class="pc-ask-msg" id="ask-{{ product.id }}" hidden role="status" aria-live="polite">Coming soon — stay tuned!</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% empty %}
+        <div class="col-12">
+          <p>No products available.</p>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+.product-card { position: relative; }
+.pc-heart-wrap, .pc-heart-form, .pc-btn, .pc-footer-actions a { position: relative; z-index: 1; }
+.pc-name-link { color: #111; text-decoration: none; }
+.pc-name-link:hover { color: #0E63F4; text-decoration: underline; }
+
+/* line clamp */
+.clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+/* Page bg */
+.product-list-bg { background: linear-gradient(135deg, #EAF4FF 0%, #FFF8F6 100%) !important; }
+
+/* Card */
+.product-card {
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 20px 40px rgba(9,63,180,0.08);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform .25s ease, box-shadow .25s ease;
+}
+.product-card:hover { transform: translateY(-6px); box-shadow: 0 30px 60px rgba(9,63,180,0.12); }
+
+/* Hero section */
+.pc-hero {
+  position: relative;
+  padding: 12px;
+  background: linear-gradient(135deg, #5AAAF8 0%, #6BC1E6 60%, #A0D8F1 100%);
+  color: #fff;
+  min-height: 200px; /* ensure space for background image */
+  overflow: hidden; /* clip bg image within hero */
+}
+.pc-hero-top { min-height: 36px; position: relative; z-index: 2; }
+.pc-badge {
+  background: #0E63F4;
+  color: #fff;
+  font-weight: 800;
+  font-size: 12px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  letter-spacing: .6px;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+}
+.pc-heart-wrap { display:flex; align-items:center; }
+.pc-heart,
+.pc-heart.disabled {
+  width: 40px; height: 40px;
+  border-radius: 999px;
+  border: none;
+  background: #fff;
+  box-shadow: 0 8px 18px rgba(0,0,0,.12);
+  color: #FF6B6B;
+  display:flex; align-items:center; justify-content:center;
+}
+.pc-heart.disabled { opacity: .6; cursor: not-allowed; }
+.pc-heart i { font-size: 18px; }
+.pc-heart.active { background: #ffe5e5; }
+.pc-heart-form { margin: 0; }
+
+.pc-title-lg { display:none; }
+.pc-subtitle { display:none; }
+.pc-hero-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* cover full hero area */
+  z-index: 0;
+  pointer-events: none; /* keep buttons clickable */
+}
+
+/* Body */
+.pc-body { padding: 16px; }
+.pc-name { color:#222; font-weight: 800; margin-bottom: 6px; }
+.pc-stars i { margin-right: 2px; }
+
+.pc-price-cta .pc-price { font-weight: 900; font-size: 22px; color:#0A2E8A; }
+.pc-price-cta .pc-price span { font-size: 20px; font-weight: 700; opacity:.8; margin-left: 4px; }
+.pc-btn {
+  background: #0E63F4; color:#fff; border: none; border-radius: 999px; padding: 10px 16px; font-weight: 700; display:inline-flex; align-items:center; box-shadow: 0 10px 18px rgba(14,99,244,.25);
+}
+.pc-btn.disabled { background:#cfd8ff; color:#6b7cff; box-shadow:none; }
+
+.pc-meta .pc-dot { width:10px; height:10px; border-radius:50%; display:inline-block; }
+.pc-meta .pc-dot.in { background:#18C36E; box-shadow:0 0 0 3px rgba(24,195,110,.2); }
+.pc-meta .pc-dot.out { background:#FF597A; box-shadow:0 0 0 3px rgba(255,89,122,.2); }
+.truncate { max-width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pc-meta a { color: inherit; }
+.pc-meta a:hover { color:#0E63F4; text-decoration: underline; }
+
+.pc-footer-actions { border-top: 1px solid rgba(0,0,0,.06); padding-top: 10px; }
+.pc-foot-link { display:flex; gap:8px; align-items:center; color:#6b7280; }
+.pc-foot-link:hover { color:#0E63F4; }
+.pc-share-menu { display:flex; flex-wrap:wrap; gap:8px; }
+.pc-share-menu .share-item { background:#f3f4f6; color:#111; padding:6px 10px; border-radius: 999px; font-size: 0.9rem; text-decoration:none; display:inline-flex; align-items:center; gap:6px; }
+.pc-share-menu .share-item.as-button { border: 0; cursor: pointer; }
+.pc-share-menu .share-item:hover { background:#e5e7eb; }
+.pc-ask-msg { background: #fff7ed; color:#9a3412; border:1px solid #fed7aa; border-radius: 8px; padding:6px 10px; font-weight:600; }
+
+/* Animations reused */
+.animate-fadein { animation: fadein 1.0s cubic-bezier(.77,0,.18,1) both; }
+@keyframes fadein { from{opacity:0; transform: translateY(24px);} to{opacity:1; transform:none;} }
+
+/* Mobile tweaks */
+@media (max-width: 576px){
+  .pc-hero{ padding:10px; min-height: 190px; }
+  .truncate { max-width: 110px; }
+}
+</style>
+{{ block.super }}
+{% endblock %}
+
+{% block footer %}
+{{ block.super }}
+{% block scripts %}
+<script>
+  // Product share logic: prefer Web Share API, fall back to a simple menu
+  document.addEventListener('click', function(e){
+    const shareLink = e.target.closest('.pc-share');
+    if (!shareLink) return;
+    e.preventDefault();
+    const url = shareLink.getAttribute('data-url');
+    const title = shareLink.getAttribute('data-title') || 'Check this product';
+    const targetId = shareLink.getAttribute('data-target');
+    if (navigator.share) {
+      navigator.share({ title, url }).catch(()=>{});
+      return;
+    }
+    const menu = document.getElementById(targetId);
+    if (!menu) return;
+    // toggle visibility
+    const currentlyHidden = menu.hasAttribute('hidden');
+    // hide other menus
+    document.querySelectorAll('.pc-share-menu').forEach(m=>m.setAttribute('hidden',''));
+    if (currentlyHidden) menu.removeAttribute('hidden');
+
+    // wire items once
+    if (!menu.dataset.wired) {
+      menu.dataset.wired = '1';
+      menu.addEventListener('click', function(ev){
+        const item = ev.target.closest('.share-item');
+        if (!item) return;
+        ev.preventDefault();
+        const svc = item.getAttribute('data-service');
+        const encUrl = encodeURIComponent(url);
+        const encTitle = encodeURIComponent(title);
+        let href = '';
+        switch(svc){
+          case 'whatsapp': href = `https://wa.me/?text=${encTitle}%20${encUrl}`; break;
+          case 'telegram': href = `https://t.me/share/url?url=${encUrl}&text=${encTitle}`; break;
+          case 'facebook': href = `https://www.facebook.com/sharer/sharer.php?u=${encUrl}`; break;
+          case 'twitter': href = `https://twitter.com/intent/tweet?url=${encUrl}&text=${encTitle}`; break;
+          case 'email': href = `mailto:?subject=${encTitle}&body=${encUrl}`; window.location.href = href; return;
+          case 'copy': navigator.clipboard && navigator.clipboard.writeText(url); item.textContent = 'Copied!'; setTimeout(()=>{ item.textContent = 'Copy Link'; }, 1500); return;
+        }
+        if (href) window.open(href, '_blank','noopener');
+      });
+      document.addEventListener('click', function(d){
+        if (!d.target.closest('#'+targetId) && !d.target.closest('.pc-share')){
+          menu.setAttribute('hidden','');
+        }
+      });
+    }
+  });
+
+  // Ask message toggle on click
+  document.addEventListener('click', function(e){
+    const askLink = e.target.closest('.pc-ask');
+    if (!askLink) return;
+    e.preventDefault();
+    const id = askLink.getAttribute('data-target');
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.removeAttribute('hidden');
+    // auto-hide after 2.5s
+    clearTimeout(el._tmr);
+    el._tmr = setTimeout(()=>{ el.setAttribute('hidden',''); }, 2500);
+  });
+</script>
+{% endblock %}
+{% endblock %}

@@ -1,0 +1,12 @@
+{% extends 'ethsgebeya/public_base.html' %}
+{% load static %}
+{% block content %}
+<div class="container py-5 text-center">
+  <div class="card shadow-lg p-5 mx-auto" style="max-width: 480px; border-radius: 18px; background: #fff8f8;">
+    <img src="{% static 'img/logo.jpg' %}" alt="ETHSGEBEYA Logo" style="width: 70px; height: 70px; border-radius: 16px; margin-bottom: 18px; box-shadow: 0 2px 8px #ED350020;">
+    <h1 class="mb-3 text-danger fw-bold">Activation Link Invalid</h1>
+    <p class="lead mb-4">The activation link is invalid, expired, or has already been used.<br>If you need a new activation email, please <a href="{% url 'resend_activation' %}" style="color: #ED3500; text-decoration: underline;">click here</a> to request another.</p>
+    <a href="/" class="btn btn-lg px-5" style="background: linear-gradient(90deg, #093FB4 0%, #ED3500 100%); color: #fff; border-radius: 30px; font-weight: 600;">Go to Home</a>
+  </div>
+</div>
+{% endblock %}

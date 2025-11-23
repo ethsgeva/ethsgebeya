@@ -1,0 +1,23 @@
+{% extends 'ethsgebeya/public_base.html' %}
+{% block content %}
+<div class="container py-5">
+  <h1 class="mb-4">My Profile</h1>
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+  <form method="post">
+    {% csrf_token %}
+    {% load widget_tweaks %}
+    {% for field in form %}
+      <div class="mb-3">
+        {{ field.label_tag }}
+        {{ field|add_class:"form-control" }}
+      </div>
+    {% endfor %}
+    <button type="submit" class="btn btn-primary">Save Changes</button>
+    <a href="{% url 'password_change' %}" class="btn btn-outline-secondary ms-2">Change Password</a>
+  </form>
+</div>
+{% endblock %}

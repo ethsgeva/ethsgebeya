@@ -1,0 +1,123 @@
+{% extends 'ethsgebeya/public_base.html' %}
+{% block content %}
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="card shadow-lg border-0 rounded-4 animate__animated animate__fadeIn">
+        <div class="card-body p-4">
+          <h1 class="mb-4 text-center" style="font-weight:700; color:#36b9cc; letter-spacing:1px;">Checkout</h1>
+          <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+              {{ form.address.label_tag }}
+              {{ form.address }}
+              {% if form.address.errors %}
+                <div class="text-danger small">{{ form.address.errors.0 }}</div>
+              {% endif %}
+            </div>
+            <div class="mb-3">
+              {{ form.phone.label_tag }}
+              {{ form.phone }}
+              {% if form.phone.errors %}
+                <div class="text-danger small">{{ form.phone.errors.0 }}</div>
+              {% endif %}
+            </div>
+            <h5 class="mt-4 mb-3" style="color:#212529; font-weight:600;">Order Summary</h5>
+            <ul class="list-group mb-3" id="order-summary-list">
+              {% for item in cart_items %}
+                <li class="list-group-item border-0 border-bottom py-3" style="background:rgba(54,185,204,0.04);">
+                  <div class="d-flex align-items-center justify-content-between gap-3">
+                    <div class="d-flex align-items-center gap-3">
+                      {% if item.product.images.all %}
+                        <img src="{{ item.product.images.all.0.image.url }}" alt="{{ item.product.title }}" style="width: 70px; height: 70px; object-fit: cover; border-radius: 12px; box-shadow:0 2px 8px rgba(54,185,204,0.12);">
+                      {% endif %}
+                      <div>
+                        <div class="fw-bold" style="font-size:1.15rem; color:#212529;">{{ item.product.title }}</div>
+                        <div class="small text-muted">Brand: {{ item.product.brand }} | Price: <span style="color:#36b9cc; font-weight:500;">ETB {{ item.price }}</span></div>
+                        <div class="small text-muted">
+                          {% if item.product.material %}Material: {{ item.product.material }} | {% endif %}
+                          {% if item.product.weight %}Weight: {{ item.product.weight }} | {% endif %}
+                          {% if item.product.dimensions %}Dimensions: {{ item.product.dimensions }}{% endif %}
+                        </div>
+                      </div>
+                    </div>
+                    <div class="input-group" style="width: 120px;">
+                      <button type="button" class="btn btn-outline-secondary btn-sm" onclick="var q=document.getElementById('id_quantity_{{ item.product.id }}');if(q.value>1)q.value--;updateOrderTotal();">-</button>
+                      <input type="number" name="quantity_{{ item.product.id }}" id="id_quantity_{{ item.product.id }}" value="{{ item.quantity }}" min="1" class="form-control form-control-sm text-center" onchange="updateOrderTotal()">
+                      <button type="button" class="btn btn-outline-secondary btn-sm" onclick="var q=document.getElementById('id_quantity_{{ item.product.id }}');q.value++;updateOrderTotal();">+</button>
+                    </div>
+                    <span id="item-total-{{ item.product.id }}" class="fw-bold" style="color:#36b9cc;">ETB {{ item.total_price }}</span>
+                  </div>
+                </li>
+              {% endfor %}
+              <li class="list-group-item d-flex justify-content-between align-items-center fw-bold border-0" id="order-summary-total" style="background:rgba(54,185,204,0.08);">
+                <span id="selected-count">Total ({{ cart_items|length }} items)</span>
+                <span id="order-total">ETB {{ cart_total }}</span>
+              </li>
+            </ul>
+            <button type="button" class="btn btn-success btn-lg w-100 rounded-pill shadow-sm" id="place-order-btn" style="font-weight:600; font-size:1.2rem;">Place Order</button>
+            <button type="submit" id="real-submit-btn" style="display:none;"></button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="order-confirm-toast" class="toast align-items-center text-bg-primary border-0 position-fixed bottom-0 end-0 m-4" role="alert" aria-live="assertive" aria-atomic="true" style="z-index: 2000; min-width: 320px; display: none;">
+  <div class="d-flex">
+    <div class="toast-body" id="order-confirm-toast-body">
+    </div>
+    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close" onclick="hideOrderToast()"></button>
+  </div>
+  <div class="d-flex justify-content-end px-3 pb-2">
+    <button class="btn btn-light btn-sm" id="order-toast-confirm-btn">Confirm Order</button>
+  </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  window.updateOrderTotal = function() {
+    var total = 0;
+    var count = 0;
+    {% for item in cart_items %}
+      var qty = parseInt(document.getElementById('id_quantity_{{ item.product.id }}').value) || 1;
+      var price = {{ item.price }};
+      var itemTotal = price * qty;
+      total += itemTotal;
+      count++;
+      document.getElementById('item-total-{{ item.product.id }}').innerText = 'ETB ' + (itemTotal).toFixed(2);
+    {% endfor %}
+    document.getElementById('order-total').innerText = 'ETB ' + total.toFixed(2);
+    document.getElementById('selected-count').innerText = 'Total (' + count + ' items)';
+  }
+  updateOrderTotal();
+
+  function showOrderToast(summary, total) {
+    document.getElementById('order-confirm-toast-body').innerHTML =
+      '<b>Review your order:</b><br>' + summary.replace(/\n/g, '<br>') + '<br><b>' + total + '</b>';
+    document.getElementById('order-confirm-toast').style.display = 'block';
+  }
+  function hideOrderToast() {
+    document.getElementById('order-confirm-toast').style.display = 'none';
+  }
+  window.hideOrderToast = hideOrderToast;
+
+  document.getElementById('order-toast-confirm-btn').onclick = function() {
+    hideOrderToast();
+    document.getElementById('real-submit-btn').click();
+  };
+
+  document.getElementById('place-order-btn').addEventListener('click', function(e) {
+    e.preventDefault();
+    var summary = '';
+    var count = 0;
+    {% for item in cart_items %}
+      var qty = parseInt(document.getElementById('id_quantity_{{ item.product.id }}').value) || 1;
+      summary += '- {{ item.product.title }} (x' + qty + ')\n';
+      count++;
+    {% endfor %}
+    var total = document.getElementById('order-total').innerText;
+    showOrderToast(summary, total);
+  });
+});
+</script>
+{% endblock %}

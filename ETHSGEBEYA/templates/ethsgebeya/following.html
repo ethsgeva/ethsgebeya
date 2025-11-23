@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Following Companies</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --brand-color: #4da6ff;
+            --brand-light: #e6f2ff;
+            --brand-dark: #1a75ff;
+            --brand-gradient: linear-gradient(135deg, #4da6ff 0%, #1a75ff 100%);
+            --text-dark: #2C3E50;
+            --text-light: #7F8C8D;
+            --white: #ffffff;
+            --shadow: 0 4px 15px rgba(77, 166, 255, 0.12);
+            --shadow-hover: 0 8px 25px rgba(77, 166, 255, 0.18);
+            --verified-color: #2ecc71;
+            --cafe-color: #e74c3c;
+            --product-color: #2ecc71;
+            --service-color: #9b59b6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e6f2ff 100%);
+            color: var(--text-dark);
+            min-height: 100vh;
+            padding: 1rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .page-title {
+            text-align: center;
+            margin: 1.5rem 0 1rem;
+            color: var(--text-dark);
+        }
+
+        .page-title h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: var(--brand-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .page-title p {
+            color: var(--text-light);
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .controls {
+            background: var(--white);
+            padding: 1rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            margin-bottom: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .search-bar {
+            position: relative;
+            width: 100%;
+        }
+
+        .search-bar input {
+            width: 100%;
+            padding: 0.8rem 0.8rem 0.8rem 2.5rem;
+            border: 1.5px solid var(--brand-light);
+            border-radius: 10px;
+            font-size: 0.9rem;
+            outline: none;
+            transition: all 0.3s ease;
+            background: var(--white);
+        }
+
+        .search-bar input:focus {
+            border-color: var(--brand-color);
+            box-shadow: 0 0 0 2px rgba(77, 166, 255, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 0.8rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--brand-color);
+            font-size: 1rem;
+        }
+
+        .filter-tags {
+            display: flex;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .filter-tag {
+            padding: 0.5rem 1rem;
+            background: var(--brand-light);
+            border: none;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            color: var(--brand-color);
+            font-size: 0.8rem;
+            white-space: nowrap;
+        }
+
+        .filter-tag.active {
+            background: var(--brand-color);
+            color: white;
+        }
+
+        .filter-tag:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 3px 8px rgba(77, 166, 255, 0.2);
+        }
+
+        .companies-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        .company-card {
+            background: var(--white);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            position: relative;
+            border: 1.5px solid var(--brand-light);
+        }
+
+        .company-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-hover);
+            border-color: var(--brand-color);
+        }
+
+        .company-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--brand-gradient);
+        }
+
+        .company-header {
+            padding: 1rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.8rem;
+        }
+
+        .company-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: bold;
+            flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(77, 166, 255, 0.25);
+            background: var(--brand-gradient);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .company-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .verified-badge {
+            position: absolute;
+            bottom: -4px;
+            right: -4px;
+            width: 18px;
+            height: 18px;
+            background: var(--verified-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.6rem;
+            border: 2px solid white;
+        }
+
+        .company-info {
+            flex: 1;
+        }
+
+        .company-name-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            margin-bottom: 0.3rem;
+            flex-wrap: wrap;
+        }
+
+        .company-name {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .company-badges {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .verified-badge-text {
+            display: flex;
+            align-items: center;
+            gap: 0.2rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 0.2rem 0.5rem;
+            border-radius: 10px;
+            background: var(--verified-color);
+            color: var(--brand-light);
+        }
+
+        .company-category {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            background: var(--brand-light);
+            color: var(--brand-color);
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .company-category.cafe {
+            background: rgba(231, 76, 60, 0.1);
+            color: var(--cafe-color);
+        }
+
+        .company-category.product {
+            background: rgba(46, 204, 113, 0.1);
+            color: var(--product-color);
+        }
+
+        .company-category.service {
+            background: rgba(155, 89, 182, 0.1);
+            color: var(--service-color);
+        }
+
+        .company-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.8rem;
+            padding: 0.8rem 1rem;
+            background: var(--brand-light);
+            margin: 0 1rem;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-value {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--brand-color);
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            color: var(--brand-color);
+            font-weight: 600;
+            opacity: 0.8;
+        }
+
+        .company-description {
+            padding: 0.8rem 1rem;
+            color: var(--text-light);
+            line-height: 1.4;
+            font-size: 0.8rem;
+        }
+
+        .company-actions {
+            padding: 1rem;
+            display: flex;
+            gap: 0.6rem;
+            border-top: 1px solid var(--brand-light);
+        }
+
+        .btn {
+            padding: 0.6rem 0.8rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.3rem;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--brand-gradient);
+            color: white;
+            flex: 2;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(77, 166, 255, 0.25);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 1.5px solid var(--brand-color);
+            color: var(--brand-color);
+            flex: 1;
+        }
+
+        .btn-secondary:hover {
+            background: var(--brand-light);
+            transform: translateY(-1px);
+        }
+
+        .btn-icon {
+            font-size: 0.8rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 2rem 1rem;
+            color: var(--text-light);
+            grid-column: 1 / -1;
+        }
+
+        .empty-state h3 {
+            margin-bottom: 0.8rem;
+            color: var(--text-dark);
+            font-size: 1.1rem;
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: var(--brand-light);
+        }
+
+        .business-hours {
+            padding: 0.5rem 1rem;
+            background: var(--brand-light);
+            margin: 0 1rem;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            color: var(--brand-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .hours-info {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        /* Tablet */
+        @media (min-width: 768px) {
+            .page-title h1 {
+                font-size: 2.2rem;
+            }
+
+            .controls {
+                flex-direction: row;
+                align-items: center;
+                padding: 1.2rem;
+            }
+
+            .search-bar {
+                flex: 1;
+            }
+
+            .filter-tags {
+                justify-content: flex-start;
+            }
+
+            .companies-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1.5rem;
+            }
+
+            .company-header {
+                padding: 1.2rem;
+            }
+
+            .company-avatar {
+                width: 55px;
+                height: 55px;
+                font-size: 1.3rem;
+            }
+
+            .verified-badge {
+                width: 20px;
+                height: 20px;
+                font-size: 0.7rem;
+            }
+
+            .company-name {
+                font-size: 1.2rem;
+            }
+
+            .btn {
+                padding: 0.7rem 1rem;
+                font-size: 0.85rem;
+            }
+        }
+
+        /* Desktop */
+        @media (min-width: 1024px) {
+            .companies-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .company-stats {
+                padding: 1rem 1.2rem;
+                margin: 0 1.2rem;
+            }
+
+            .company-description {
+                padding: 1rem 1.2rem;
+            }
+
+            .company-actions {
+                padding: 1.2rem;
+            }
+
+            .business-hours {
+                margin: 0 1.2rem;
+                padding: 0.6rem 1.2rem;
+            }
+        }
+
+        /* Large Desktop */
+        @media (min-width: 1440px) {
+            .page-title h1 {
+                font-size: 2.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="page-title">
+            <h1>Following Companies</h1>
+            <p>Discover amazing cafes, restaurants, shops, and service providers you follow</p>
+        </div>
+
+        <div class="controls">
+            <div class="search-bar">
+                <span class="search-icon"><i class="fas fa-search"></i></span>
+                <input type="text" id="searchInput" placeholder="Search companies...">
+            </div>
+            <div class="filter-tags">
+                <button class="filter-tag active" data-category="all">All</button>
+                <button class="filter-tag" data-category="product_seller"><i class="fas fa-box"></i> Product Sellers</button>
+                <button class="filter-tag" data-category="cafe_restaurant"><i class="fas fa-coffee"></i> Cafes & Restaurants</button>
+                <button class="filter-tag" data-category="service_provider"><i class="fas fa-tools"></i> Service Providers</button>
+            </div>
+        </div>
+
+        <div class="companies-grid" id="companiesGrid">
+            {% for seller in following_sellers %}
+            <div class="company-card" data-category="{{ seller.business_type }}">
+                <div class="company-header">
+                    <div class="company-avatar">
+                        {% if seller.create_logo %}
+                            <img src="{{ seller.create_logo.url }}" alt="{{ seller.company_name }}">
+                        {% else %}
+                            <span>{{ seller.company_name|slice:":2"|upper }}</span>
+                        {% endif %}
+                        {% if seller.is_verified %}
+                            <div class="verified-badge"><i class="fas fa-shield-alt"></i></div>
+                        {% endif %}
+                    </div>
+                    <div class="company-info">
+                        <div class="company-name-wrapper">
+                            <div class="company-name">{{ seller.company_name }}</div>
+                            {% if seller.is_verified %}
+                                <div class="verified-badge-text">
+                                    <i class="fas fa-shield-alt"></i> Verified
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="company-category {{ seller.business_type }}">
+                            {{ seller.get_business_type_display|upper }}
+                        </div>
+                    </div>
+                </div>
+
+                {% if seller.opening_time and seller.closing_time %}
+                <div class="business-hours">
+                    <div class="hours-info">
+                        <i class="fas fa-clock"></i>
+                        <span>Open: {{ seller.opening_time|time:"g:i A" }} - {{ seller.closing_time|time:"g:i A" }}</span>
+                    </div>
+                    {% if seller.is_open_now %}
+                    <span style="color: var(--product-color); font-weight: 600;">● Open Now</span>
+                    {% else %}
+                    <span style="color: var(--cafe-color); font-weight: 600;">● Closed</span>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <div class="company-stats">
+                    <div class="stat">
+                        <div class="stat-value">{{ seller.followers.count }}</div>
+                        <div class="stat-label">FOLLOWERS</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">{{ seller.average_rating|default:"4.5" }}</div>
+                        <div class="stat-label">RATING</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">{{ seller.products.count }}</div>
+                        <div class="stat-label">PRODUCTS</div>
+                    </div>
+                </div>
+
+                <div class="company-description">
+                    {{ seller.description|truncatewords:30 }}
+                </div>
+
+                <div class="company-actions">
+                    <a href="{% url 'seller_profile' seller.user.id %}" class="btn btn-primary">
+                        <i class="fas fa-eye btn-icon"></i>
+                        View Profile
+                    </a>
+                    <form method="post" action="{% url 'unfollow_seller' seller.id %}" style="display: inline; flex: 1;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-secondary" onclick="return confirm('Are you sure you want to unfollow {{ seller.company_name }}?')">
+                            <i class="fas fa-user-minus btn-icon"></i>
+                            Unfollow
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% empty %}
+            <div class="empty-state">
+                <div class="empty-state-icon">
+                    <i class="fas fa-store-slash"></i>
+                </div>
+                <h3>No companies followed yet</h3>
+                <p>Start following companies to see them here</p>
+                <a href="{% url 'explore_sellers' %}" class="btn btn-primary" style="margin-top: 1rem;">
+                    <i class="fas fa-compass"></i>
+                    Explore Companies
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <script>
+        // JavaScript for filtering and search functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('searchInput');
+            const filterTags = document.querySelectorAll('.filter-tag');
+            const companyCards = document.querySelectorAll('.company-card');
+
+            // Filter function
+            function filterCompanies() {
+                const searchTerm = searchInput.value.toLowerCase();
+                const activeCategory = document.querySelector('.filter-tag.active').dataset.category;
+
+                companyCards.forEach(card => {
+                    const companyName = card.querySelector('.company-name').textContent.toLowerCase();
+                    const companyDescription = card.querySelector('.company-description').textContent.toLowerCase();
+                    const companyCategory = card.dataset.category;
+
+                    const matchesSearch = companyName.includes(searchTerm) || 
+                                        companyDescription.includes(searchTerm);
+                    const matchesCategory = activeCategory === 'all' || companyCategory === activeCategory;
+
+                    if (matchesSearch && matchesCategory) {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+
+                // Show empty state if no cards visible
+                const visibleCards = document.querySelectorAll('.company-card[style="display: block"]');
+                const emptyState = document.querySelector('.empty-state');
+                
+                if (visibleCards.length === 0 && !emptyState) {
+                    showEmptyState();
+                }
+            }
+
+            function showEmptyState() {
+                const companiesGrid = document.getElementById('companiesGrid');
+                companiesGrid.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <h3>No companies found</h3>
+                        <p>Try adjusting your search or filter criteria</p>
+                    </div>
+                `;
+            }
+
+            // Event listeners
+            searchInput.addEventListener('input', filterCompanies);
+
+            filterTags.forEach(tag => {
+                tag.addEventListener('click', () => {
+                    filterTags.forEach(t => t.classList.remove('active'));
+                    tag.classList.add('active');
+                    filterCompanies();
+                });
+            });
+
+            // Add method to SellerProfile model for checking if open now
+            function isOpenNow(openingTime, closingTime) {
+                const now = new Date();
+                const currentTime = now.getHours() * 60 + now.getMinutes();
+                const openTime = openingTime.hour * 60 + openingTime.minute;
+                const closeTime = closingTime.hour * 60 + closingTime.minute;
+                
+                return currentTime >= openTime && currentTime <= closeTime;
+            }
+        });
+    </script>
+</body>
+</html>

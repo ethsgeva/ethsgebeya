@@ -1,0 +1,1099 @@
+{% extends 'warehouse/base.html' %}
+{% load bootstrap4 %}
+{% load widget_tweaks %}
+{% load static %}
+
+{% block content %}
+<!-- Pop-up for Django messages -->
+{% if messages %}
+  <div id="popup-message" class="modal fade show" tabindex="-1" style="display:block; background:rgba(0,0,0,0.3);">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Notification</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" onclick="closePopup()"></button>
+        </div>
+        <div class="modal-body">
+          {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} mb-0">{{ message }}</div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    function closePopup() {
+      document.getElementById('popup-message').style.display = 'none';
+    }
+    setTimeout(closePopup, 4000);
+  </script>
+{% endif %}
+
+<div class="container-fluid py-4" style="overflow-x:hidden;">
+  <div class="row">
+    <!-- Left Sidebar -->
+    <div class="col-12 col-lg-4 mb-4">
+      <div class="card shadow-sm h-100">
+        <div class="card-header bg-gradient-primary text-white py-4">
+          <div class="d-flex align-items-center">
+            <div class="avatar me-3">
+              <img src="{% if request.user.sellerprofile.create_logo %}{{ request.user.sellerprofile.create_logo.url }}{% else %}{% static 'img/profile_img.jpg' %}{% endif %}" 
+                   class="rounded-circle profile-sidebar-img" width="60" height="60" alt="Profile">
+            </div>
+            <div>
+              <h5 class="mb-0">{{ request.user.get_full_name|title }}</h5>
+              <p class="mb-0 small opacity-75">{{ request.user.email }}</p>
+              <span class="badge bg-light text-dark mt-1">
+                <div class="profile-role">
+                  <i class="fas fa-store me-1"></i> {{ request.user.profile.role|capfirst }} Account
+                </div>
+              </span>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <ul class="nav flex-column settings-nav">
+            <li class="nav-item">
+              <a class="nav-link active" href="#" data-tab="profile">
+                <i class="fas fa-user-circle me-2"></i> Personal Profile
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#" data-tab="store">
+                <i class="fas fa-store me-2"></i> Store Settings
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#" data-tab="security">
+                <i class="fas fa-lock me-2"></i> Security
+              </a>
+            </li>
+            <li class="nav-item mt-4 pt-3 border-top">
+              <form method="post" action="{% url 'sign-out' %}" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="nav-link text-danger" style="background:none; border:none; padding:0;">
+                  <i class="fas fa-sign-out-alt me-2"></i> Logout
+                </button>
+              </form>
+            </li>
+          </ul>
+        </div>
+        <div class="card-footer bg-light py-3 text-center">
+          <small class="text-muted">Last updated: {{ request.user.sellerprofile.updated_at|date:"M d, Y" }}</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="col-12 col-lg">
+      <div class="tab-content">
+        <!-- Profile Tab -->
+        <div class="tab-pane active" id="profile">
+          <div class="card shadow-sm mb-4">
+            <div class="card-header bg-white py-3 border-bottom">
+              <h5 class="mb-0 d-flex align-items-center">
+                <i class="fas fa-user-circle text-primary me-2"></i> Personal Profile
+              </h5>
+            </div>
+            <div class="card-body">
+              <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="row">
+                  <div class="col-12 col-md-6">
+                    <div class="mb-4">
+                      <h6 class="mb-3 text-uppercase text-secondary small">Personal Information</h6>
+                      {% for field in user_form %}
+                        <div class="mb-3">
+                          {{ field.label_tag }}
+                          {{ field|add_class:"form-control" }}
+                          {% if field.help_text %}
+                            <small class="form-text text-muted">{{ field.help_text|safe }}</small>
+                          {% endif %}
+                          {% for error in field.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                          {% endfor %}
+                        </div>
+                      {% endfor %}
+                    </div>
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <div class="mb-4">
+                      <h6 class="mb-3 text-uppercase text-secondary small">Company logo</h6>
+                      <div class="text-center mb-3">
+                        <div class="avatar-upload mx-auto">
+                          <div class="avatar-preview rounded-circle">
+                            <img src="{% if request.user.sellerprofile.create_logo %}{{ request.user.sellerprofile.create_logo.url }}{% else %}{% static 'img/profile_img.jpg' %}{% endif %}" 
+                                 alt="Profile" class="rounded-circle" width="120" height="120" id="logo-preview">
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="d-flex justify-content-end border-top pt-4 mt-4">
+                  <input type="hidden" name="action" value="update_profile">
+                  <button type="submit" class="btn btn-primary px-4 py-2">
+                    <i class="fas fa-save me-2"></i> Save
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- Store Settings Tab -->
+        <div class="tab-pane" id="store">
+          <div class="card shadow-sm mb-4">
+            <div class="card-header bg-white py-3 border-bottom">
+              <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 d-flex align-items-center">
+                  {% if user_type == 'Seller' %}
+                    <i class="fas fa-store text-primary me-2"></i> {{ request.user.profile.role|capfirst }} Settings
+                  {% else %}
+                    <i class="fas fa-user text-primary me-2"></i> Buyer Settings
+                  {% endif %}
+                </h5>
+                <span class="badge bg-primary">
+                  {{ request.user.profile.role|capfirst }} Account
+                </span>
+              </div>
+            </div>
+            <div class="card-body">
+              <form method="POST" enctype="multipart/form-data" class="store-settings-form">
+                {% csrf_token %}
+                
+                <div class="row">
+                  <!-- Left Column: Business Information -->
+                  <div class="col">
+                    <div class="form-section mb-5">
+                      <div class="section-header d-flex align-items-center mb-4">
+                        <div class="icon-circle bg-primary text-white me-3">
+                          <i class="fas fa-building"></i>
+                        </div>
+                        <h6 class="mb-0">Business Information</h6>
+                      </div>
+                      <!-- Business Type Field -->
+              <div class="form-group mb-4">
+                <label class="form-label">
+                  <i class="fas fa-store text-muted me-2"></i>Business Type *
+                </label>
+                <select name="{{ seller_form.business_type.name }}" 
+                        id="{{ seller_form.business_type.id_for_label }}" 
+                        class="form-select business-type-select"
+                        onchange="updateBusinessFields(this.value)">
+                  {% for value, label in seller_form.business_type.field.choices %}
+                    {% if value %}
+                      <option value="{{ value }}" 
+                              {% if seller_form.business_type.value == value %}selected{% endif %}>
+                        {{ label|safe }}
+                      </option>
+                    {% endif %}
+                  {% endfor %}
+                </select>
+                {% if seller_form.business_type.errors %}
+                  <div class="invalid-feedback d-block">
+                    {% for error in seller_form.business_type.errors %}
+                      {{ error }}
+                    {% endfor %}
+                  </div>
+                {% endif %}
+                <div class="form-text">Select the primary focus of your business</div>
+              </div>
+              
+              <!-- Business Specific Fields (Initially Hidden) -->
+              <div class="business-specific-fields">
+                <!-- Service Provider Fields -->
+                <div class="form-group mb-4 service-field" style="display: none;">
+                  <label class="form-label">
+                    <i class="fas fa-tools text-muted me-2"></i>Service Categories
+                  </label>
+                  <input type="text" name="service_categories" class="form-control" 
+                         placeholder="e.g., Repair, Cleaning, Consultation, Installation"
+                         value="{% if seller_form.service_categories.value %}{{ seller_form.service_categories.value }}{% endif %}">
+                  <div class="form-text">List the types of services you offer</div>
+                </div>
+                
+                <!-- Cafe/Restaurant Fields -->
+                <div class="form-group mb-4 food-field" style="display: none;">
+                  <label class="form-label">
+                    <i class="fas fa-utensils text-muted me-2"></i>Cuisine Type
+                  </label>
+                  <input type="text" name="cuisine_type" class="form-control" 
+                         placeholder="e.g., Ethiopian, Italian, Fast Food, Coffee Shop"
+                         value="{% if seller_form.cuisine_type.value %}{{ seller_form.cuisine_type.value }}{% endif %}">
+                  <div class="form-text">Describe your cuisine or food specialty</div>
+                </div>
+                
+                <!-- Product Seller Fields -->
+                <div class="form-group mb-4 product-field" style="display: none;">
+                  <label class="form-label">
+                    <i class="fas fa-shopping-bag text-muted me-2"></i>Product Categories
+                  </label>
+                  <input type="text" name="product_categories" class="form-control" 
+                         placeholder="e.g., Electronics, Clothing, Home Goods, Beauty Products"
+                         value="{% if seller_form.product_categories.value %}{{ seller_form.product_categories.value }}{% endif %}">
+                  <div class="form-text">List the types of products you sell</div>
+                </div>
+              </div>
+                    
+                
+                
+                      <div class="form-group mb-4">
+                        <label class="form-label">
+                          <i class="fas fa-sign text-muted me-2"></i>Company Name
+                        </label>
+                        {{ seller_form.company_name|add_class:"form-control" }}
+                        <div class="form-text">Your official business name as registered</div>
+                      </div>
+                      
+                      <div class="row">
+                        <div class="col-md-6">
+                          <div class="form-group mb-4">
+                            <label class="form-label">
+                              <i class="far fa-clock text-muted me-2"></i>Opening Time
+                            </label>
+                            <div class="input-group">
+                              <span class="input-group-text"><i class="fas fa-sun"></i></span>
+                              {{ seller_form.opening_time|add_class:"form-control" }}
+                            </div>
+                          </div>
+                        </div>
+                        <div class="col-md-6">
+                          <div class="form-group mb-4">
+                            <label class="form-label">
+                              <i class="far fa-clock text-muted me-2"></i>Closing Time
+                            </label>
+                            <div class="input-group">
+                              <span class="input-group-text"><i class="fas fa-moon"></i></span>
+                              {{ seller_form.closing_time|add_class:"form-control" }}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div class="form-group mb-4">
+                        <label class="form-label">
+                          <i class="fas fa-phone-alt text-muted me-2"></i>Contact Number
+                        </label>
+                        <div class="input-group">
+                          <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                          {{ seller_form.contact_number|add_class:"form-control" }}
+                        </div>
+                      </div>
+                      
+                      <div class="form-group">
+                        <label class="form-label">
+                          <i class="fas fa-map-marker-alt text-muted me-2"></i>Store Address
+                        </label>
+                        {{ seller_form.address|add_class:"form-control" }}
+                      </div>
+  
+                    </div>
+                    <!-- Store Location (Map Picker) -->
+                    <div class="form-section mb-5">
+                      <div class="section-header d-flex align-items-center mb-3">
+                        <div class="icon-circle bg-warning text-white me-3">
+                          <i class="fas fa-location-dot"></i>
+                        </div>
+                        <h6 class="mb-0">Store Location</h6>
+                      </div>
+
+                      <div class="row g-3 align-items-end mb-3">
+                        <div class="col-md-6">
+                          <label class="form-label"><i class="fas fa-arrows-up-down-left-right text-muted me-2"></i>Latitude</label>
+                          {{ seller_form.latitude|add_class:"form-control" }}
+                        </div>
+                        <div class="col-md-6">
+                          <label class="form-label"><i class="fas fa-arrows-left-right-to-line text-muted me-2"></i>Longitude</label>
+                          {{ seller_form.longitude|add_class:"form-control" }}
+                        </div>
+                      </div>
+
+                      <div class="d-flex justify-content-between flex-wrap gap-2 mb-2">
+                        <div class="btn-group" role="group" aria-label="Basemap selector">
+                    <button type="button" class="btn btn-sm btn-outline-primary" id="bm-streets">Streets</button>
+                    <button type="button" class="btn btn-sm btn-outline-primary" id="bm-satellite">Satellite + Labels</button>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                          <button type="button" class="btn btn-sm btn-outline-success" id="btn-geolocate"><i class="fas fa-location-crosshairs me-1"></i>Use my location</button>
+                          <small class="text-muted">Drag the pin or type coordinates</small>
+                        </div>
+                          <div class="input-group" style="max-width:340px;">
+                            <input type="text" class="form-control" id="seller-map-search" placeholder="Search place or address...">
+                            <button type="button" class="btn btn-outline-secondary" id="seller-map-search-btn"><i class="fas fa-search"></i></button>
+                          </div>
+                      </div>
+
+                      <div id="seller-picker-map" class="maplibre-container rounded"></div>
+                    </div>
+                    <div class="form-section mb-4">
+                       <div class="section-header d-flex flex-column align-items-center mb-4">
+                        <div class="icon-circle bg-success text-white mb-2">
+                          <i class="fas fa-image"></i>
+                        </div>
+                        <h6 class="mb-0 text-center">Store Logo</h6>
+                      </div>
+                      
+                      <div class="logo-upload-container d-flex flex-column align-items-center justify-content-center">
+                        <div class="logo-preview-container mb-3 mx-auto">
+                          <div class="logo-preview rounded-circle">
+                            {% if request.user.sellerprofile.create_logo %}
+                              <img src="{{ request.user.sellerprofile.create_logo.url }}" 
+                                   alt="Store Logo" class="rounded-circle">
+                            {% else %}
+                              <div class="no-logo-placeholder rounded-circle">
+                                <i class="fas fa-store"></i>
+                              </div>
+                            {% endif %}
+                          </div>
+                        </div>
+
+                      <!-- Map picker scripts for Store Location -->
+                      <link href="https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.css" rel="stylesheet" />
+                      <script src="https://unpkg.com/maplibre-gl@3.6.1/dist/maplibre-gl.js"></script>
+                      <script>
+                        (function() {
+                          const latInput = document.getElementById('id_latitude');
+                          const lngInput = document.getElementById('id_longitude');
+                          if (!latInput || !lngInput) return; // latitude/longitude not in form
+
+                          // Parse initial values; default to Ethiopia (Addis Ababa)
+                          function toNum(v) { const n = parseFloat(v); return isFinite(n) ? n : null; }
+                          let initLat = toNum(latInput.value);
+                          let initLng = toNum(lngInput.value);
+                          const hasInit = initLat !== null && initLng !== null;
+                          // Advanced: auto-detect location if fields are empty
+                          function autoDetectLocation() {
+                            if (navigator.geolocation) {
+                              navigator.geolocation.getCurrentPosition((pos) => {
+                                initLat = pos.coords.latitude;
+                                initLng = pos.coords.longitude;
+                                latInput.value = initLat.toFixed(6);
+                                lngInput.value = initLng.toFixed(6);
+                                marker.setLngLat([initLng, initLat]);
+                                map.setCenter([initLng, initLat]);
+                                map.setZoom(15);
+                              }, () => {}, { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 });
+                            }
+                          }
+                          if (!hasInit) {
+                            initLat = 8.9806; initLng = 38.7578;
+                            setTimeout(autoDetectLocation, 500); // Try auto-detect after map init
+                          }
+
+                          // Simple raster styles
+                          const styleStreets = {
+                            version: 8,
+                            sources: {
+                              osm: { type: 'raster', tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'], tileSize: 256, attribution: '© OpenStreetMap contributors' }
+                            },
+                            layers: [{ id: 'osm', type: 'raster', source: 'osm' }]
+                          };
+                          const styleSatellite = {
+                            version: 8,
+                            sources: {
+                              esri: { type: 'raster', tiles: ['https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'], tileSize: 256, attribution: 'Tiles © Esri' },
+                              places: { type: 'raster', tiles: ['https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}'], tileSize: 256 },
+                              roads: { type: 'raster', tiles: ['https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}'], tileSize: 256 }
+                            },
+                            layers: [
+                              { id: 'esri', type: 'raster', source: 'esri' },
+                              { id: 'places', type: 'raster', source: 'places' },
+                              { id: 'roads', type: 'raster', source: 'roads' }
+                            ]
+                          };
+
+                          let currentStyle = 'streets';
+                          const map = new maplibregl.Map({
+                            container: 'seller-picker-map',
+                            style: styleStreets,
+                            center: [initLng, initLat],
+                            zoom: hasInit ? 14 : 6,
+                            maxZoom: 19
+                          });
+
+                          // Show warning if zoom exceeds available satellite data
+                          let zoomWarning = null;
+                          function showZoomWarning() {
+                            if (!zoomWarning) {
+                              zoomWarning = document.createElement('div');
+                              zoomWarning.className = 'alert alert-warning position-absolute w-100 text-center';
+                              zoomWarning.style.top = '10px';
+                              zoomWarning.style.left = '0';
+                              zoomWarning.style.zIndex = '10';
+                              zoomWarning.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i> Satellite/labels are only available up to zoom 19.';
+                              document.getElementById('seller-picker-map').appendChild(zoomWarning);
+                              setTimeout(() => { if (zoomWarning) zoomWarning.remove(); zoomWarning = null; }, 3500);
+                            }
+                          }
+                          map.on('zoom', () => {
+                            if (currentStyle === 'satellite' && map.getZoom() > 19) {
+                              map.zoomTo(19, { duration: 0 });
+                              showZoomWarning();
+                            }
+                          });
+
+                          map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'top-right');
+
+                          const marker = new maplibregl.Marker({ draggable: true, color: '#e74a3b' })
+                            .setLngLat([initLng, initLat])
+                            .addTo(map);
+
+                          function setInputsFromLL(lng, lat) {
+                            latInput.value = lat.toFixed(6);
+                            lngInput.value = lng.toFixed(6);
+                          }
+
+                          marker.on('dragend', () => {
+                            const { lng, lat } = marker.getLngLat();
+                            setInputsFromLL(lng, lat);
+                          });
+
+                          function flyToInputs() {
+                            const lat = toNum(latInput.value);
+                            const lng = toNum(lngInput.value);
+                            if (lat === null || lng === null) return;
+                            marker.setLngLat([lng, lat]);
+                            map.flyTo({ center: [lng, lat], zoom: Math.max(map.getZoom(), 14) });
+                          }
+
+                          latInput.addEventListener('change', flyToInputs);
+                          lngInput.addEventListener('change', flyToInputs);
+
+                          // Basemap switches
+                          function setStyle(next) {
+                            if (next === currentStyle) return;
+                            currentStyle = next;
+                            const style = next === 'satellite' ? styleSatellite : styleStreets;
+                            map.setStyle(style);
+                            // Recenter after style load to avoid minor jumps
+                            map.once('styledata', () => {
+                              const { lng, lat } = marker.getLngLat();
+                              map.setCenter([lng, lat]);
+                            });
+                          }
+                          document.getElementById('bm-streets').addEventListener('click', () => setStyle('streets'));
+                          document.getElementById('bm-satellite').addEventListener('click', () => setStyle('satellite'));
+
+                          // Geolocate
+                          document.getElementById('btn-geolocate').addEventListener('click', () => {
+                            if (!navigator.geolocation) return alert('Geolocation not supported');
+                            navigator.geolocation.getCurrentPosition((pos) => {
+                              const lat = pos.coords.latitude;
+                              const lng = pos.coords.longitude;
+                              marker.setLngLat([lng, lat]);
+                              setInputsFromLL(lng, lat);
+                              map.flyTo({ center: [lng, lat], zoom: 15 });
+                            }, (err) => {
+                              console.warn('Geolocate error', err);
+                              alert('Could not get your location');
+                            }, { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 });
+                          });
+                          // Place search (Nominatim)
+                          const searchInput = document.getElementById('seller-map-search');
+                          const searchBtn = document.getElementById('seller-map-search-btn');
+                          function doSearch() {
+                            const q = searchInput.value.trim();
+                            if (!q) return;
+                            searchBtn.disabled = true;
+                            searchBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+                            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}`)
+                              .then(r => r.json())
+                              .then(results => {
+                                searchBtn.disabled = false;
+                                searchBtn.innerHTML = '<i class="fas fa-search"></i>';
+                                if (!results.length) return alert('No results found');
+                                const place = results[0];
+                                const lat = parseFloat(place.lat);
+                                const lng = parseFloat(place.lon);
+                                marker.setLngLat([lng, lat]);
+                                setInputsFromLL(lng, lat);
+                                map.flyTo({ center: [lng, lat], zoom: 16 });
+                              })
+                              .catch(() => {
+                                searchBtn.disabled = false;
+                                searchBtn.innerHTML = '<i class="fas fa-search"></i>';
+                                alert('Search failed');
+                              });
+                          }
+                          searchBtn.addEventListener('click', doSearch);
+                          searchInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') doSearch(); });
+                        })();
+                      </script>
+
+                        
+                        <div class="file-upload-wrapper w-100 d-flex flex-column align-items-center">
+                          <label for="id_create_logo" class="btn btn-outline-primary btn-upload mb-2 w-100" style="max-width:260px;">
+                            <i class="fas fa-cloud-upload-alt me-2"></i>Upload New Logo
+                          </label>
+                          {{ seller_form.create_logo|add_class:"form-control" }}
+                          <div class="form-text text-center">JPG, PNG or GIF (Max 2MB)</div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div class="form-section">
+                      <div class="section-header d-flex align-items-center mb-4">
+                        <div class="icon-circle bg-info text-white me-3">
+                          <i class="fas fa-align-left"></i>
+                        </div>
+                        <h6 class="mb-0">Store Description</h6>
+                      </div>
+                      
+                      <div class="form-group">
+                        <label class="form-label">
+                          <i class="fas fa-edit text-muted me-2"></i>About Your Store
+                        </label>
+                        {{ seller_form.description|add_class:"form-control" }}
+                        <div class="form-text">Tell customers about your business (max 500 characters)</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="d-flex justify-content-end border-top pt-4 mt-4">
+                  {% if user_type == 'Seller' %}
+                    <input type="hidden" name="action" value="update_store">
+                    <button type="submit" class="btn btn-primary px-4 py-2">
+                      <i class="fas fa-save me-2"></i> Update Store Settings
+                    </button>
+                  {% else %}
+                    <button type="submit" name="action" value="switch_to_seller" class="btn btn-success ms-3">
+                      <i class="fas fa-store"></i> Switch to Seller
+                    </button>
+                  {% endif %}
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- Security Tab -->
+        <div class="tab-pane" id="security">
+          <div class="card shadow-sm">
+            <div class="card-header bg-white py-3 border-bottom">
+              <h5 class="mb-0 d-flex align-items-center">
+                <i class="fas fa-lock text-primary me-2"></i> Security Settings
+              </h5>
+            </div>
+            <div class="card-body">
+              <form method="POST">
+                {% csrf_token %}
+                <h6 class="mb-3 text-uppercase text-secondary small">Change Password</h6>
+                <div class="alert alert-info">
+                  <i class="fas fa-info-circle me-2"></i>
+                  Use a strong password that contains letters, numbers, and special characters.
+                </div>
+                
+                <div class="row">
+                  <div class="col-md-6">
+                    {% for field in password_form %}
+                      <div class="mb-3">
+                        {{ field.label_tag }}
+                        {{ field|add_class:"form-control" }}
+                        {% if field.help_text %}
+                          <small class="form-text text-muted">{{ field.help_text|safe }}</small>
+                        {% endif %}
+                        {% for error in field.errors %}
+                          <div class="invalid-feedback d-block">{{ error }}</div>
+                        {% endfor %}
+                      </div>
+                    {% endfor %}
+                  </div>
+                </div>
+                
+                <div class="d-flex justify-content-end border-top pt-4">
+                  <input type="hidden" name="action" value="update_password">
+                  <button type="submit" class="btn btn-primary px-4">
+                    <i class="fas fa-key me-1"></i> Change Password
+                  </button>
+                </div>
+              </form>
+              
+              <div class="mt-5 pt-4 border-top">
+                <h6 class="mb-3 text-uppercase text-secondary small">Security Sessions</h6>
+                <div class="d-flex justify-content-between align-items-center">
+                  
+                  <button class="btn btn-sm btn-outline-danger">
+                    Logout Device
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+{% if user_type == "Seller" and seller_form %}
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <!-- ...existing seller form fields... -->
+    <hr>
+    <button type="submit" name="action" value="switch_to_buyer" class="btn btn-warning">
+        Switch to Buyer
+    </button>
+</form>
+{% endif %}
+<script>
+// Business type field functionality
+
+// Initialize business fields on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const businessTypeSelect = document.querySelector('.business-type-select');
+    if (businessTypeSelect) {
+        // Initialize with current value
+        updateBusinessFields(businessTypeSelect.value);
+        
+        // Add change event listener
+        businessTypeSelect.addEventListener('change', function() {
+            updateBusinessFields(this.value);
+        });
+    }
+});
+
+// Tab switching functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const navLinks = document.querySelectorAll('.settings-nav .nav-link');
+    const tabPanes = document.querySelectorAll('.tab-pane');
+    
+    navLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Remove active class from all links and panes
+            navLinks.forEach(nav => nav.classList.remove('active'));
+            tabPanes.forEach(pane => pane.classList.remove('active'));
+            
+            // Add active class to clicked link
+            this.classList.add('active');
+            
+            // Show corresponding tab pane
+            const tabId = this.getAttribute('data-tab');
+            const targetTab = document.getElementById(tabId);
+            if (targetTab) {
+                targetTab.classList.add('active');
+            }
+        });
+    });
+});
+
+// Logo preview functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const logoInput = document.querySelector('#id_create_logo');
+    const logoPreview = document.querySelector('.logo-preview img');
+    const noLogoPlaceholder = document.querySelector('.no-logo-placeholder');
+    
+    if (logoInput) {
+        logoInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    if (logoPreview) {
+                        logoPreview.src = e.target.result;
+                    } else if (noLogoPlaceholder) {
+                        // Replace placeholder with actual image
+                        noLogoPlaceholder.outerHTML = `<img src="${e.target.result}" alt="Store Logo" class="rounded-circle">`;
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+});
+</script>
+
+
+<style>
+  .settings-nav .nav-link {
+    border-radius: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    color: #4a5568;
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+    transition: all 0.3s;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+  }
+  
+  .settings-nav .nav-link:hover {
+    background-color: #edf2f7;
+    color: #2d3748;
+  }
+  
+  .settings-nav .nav-link.active {
+    background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+    color: white;
+    box-shadow: 0 4px 6px rgba(78, 115, 223, 0.2);
+    transform: translateX(5px);
+  }
+  
+  .settings-nav .nav-link i {
+    width: 24px;
+    text-align: center;
+  }
+  
+  .card-header.bg-gradient-primary {
+    background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+  }
+  
+  .avatar-upload {
+    position: relative;
+    max-width: 150px;
+  }
+  
+  .avatar-upload input[type="file"] {
+    display: none;
+  }
+  
+  .avatar-preview {
+    width: 120px;
+    height: 120px;
+    border: 3px solid #e2e8f0;
+    overflow: hidden;
+    margin: 0 auto;
+  }
+  
+  .form-control, .custom-select {
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid #e2e8f0;
+  }
+  
+  .form-control:focus, .custom-select:focus {
+    box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+    border-color: #4e73df;
+  }
+  
+  .card {
+    border-radius: 0.75rem;
+    border: none;
+    box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s ease;
+  }
+  
+  .card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0.75rem 1.75rem rgba(0, 0, 0, 0.1);
+  }
+  
+  .card-header {
+    background-color: white;
+    border-bottom: 1px solid #edf2f7;
+    padding: 1.25rem 1.5rem;
+  }
+  
+  .btn-primary {
+    background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+    border: none;
+    border-radius: 0.75rem;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    transition: all 0.3s;
+  }
+  
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(78, 115, 223, 0.3);
+  }
+  
+  .badge {
+    border-radius: 1rem;
+    padding: 0.35rem 0.75rem;
+    font-weight: 500;
+  }
+  
+  /* Compass Styles */
+  .compass-container {
+    display: inline-block;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 50%;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+  }
+  
+  .compass {
+    width: 120px;
+    height: 120px;
+    border: 3px solid #4e73df;
+    border-radius: 50%;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+  }
+  
+  .arrow {
+    font-size: 24px;
+    font-weight: bold;
+    color: #e74a3b;
+    transform: rotate(0deg);
+    transition: transform 0.5s ease;
+  }
+  
+  .heading-display {
+    font-weight: 500;
+    color: #4e73df;
+    font-size: 1.1rem;
+  }
+  
+  /* Animation for tab switching */
+  .tab-pane {
+    display: none;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+  
+  .tab-pane.active {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
+  }
+  /* Enhanced Form Styles */
+  .store-settings-form {
+    padding: 0 15px;
+  }
+  
+  .form-section {
+    background: #fff;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    margin-bottom: 30px;
+    border: 1px solid #edf2f7;
+    transition: all 0.3s ease;
+  }
+  
+  .form-section:hover {
+    box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+    transform: translateY(-3px);
+  }
+  
+  .section-header {
+    padding-bottom: 15px;
+    border-bottom: 1px dashed #e2e8f0;
+  }
+  
+  .icon-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .form-label {
+    font-weight: 600;
+    color: #2d3748;
+    margin-bottom: 8px;
+    display: block;
+  }
+  
+  .form-group {
+    margin-bottom: 25px;
+  }
+  
+  .form-control, .form-select {
+    border-radius: 8px;
+    padding: 12px 15px;
+    border: 1px solid #e2e8f0;
+    font-size: 15px;
+    transition: all 0.3s;
+  }
+  
+  .form-control:focus, .form-select:focus {
+    border-color: #4e73df;
+    box-shadow: 0 0 0 3px rgba(78, 115, 223, 0.15);
+  }
+  
+  .form-text {
+    font-size: 13px;
+    color: #718096;
+    margin-top: 6px;
+  }
+  
+  /* Logo Upload Styles */
+  .logo-upload-container {
+    padding: 15px;
+  }
+  
+  .logo-preview-container {
+    width: 180px;
+    height: 180px;
+    position: relative;
+  }
+  
+  .logo-preview {
+    width: 100%;
+    height: 100%;
+    border: 2px dashed #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    transition: all 0.3s;
+  }
+  
+  .logo-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .no-logo-placeholder {
+    width: 100%;
+    height: 100%;
+    background: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    color: #cbd5e0;
+  }
+  
+  .file-upload-wrapper {
+    position: relative;
+    overflow: hidden;
+    display: inline-block;
+  }
+  
+  .btn-upload {
+    border-radius: 8px;
+    font-weight: 500;
+    padding: 10px 20px;
+    transition: all 0.3s;
+  }
+  
+  .btn-upload:hover {
+    background: #4e73df;
+    color: white;
+  }
+  
+  .file-upload-wrapper input[type="file"] {
+    position: absolute;
+    left: 0;
+    top: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+  }
+  
+  /* Business Hours Styles */
+  .input-group {
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  
+  .input-group-text {
+    background: #f8f9fa;
+    border: 1px solid #e2e8f0;
+    border-right: none;
+    color: #718096;
+  }
+  
+  .form-control.time-input {
+    border-left: none;
+  }
+  
+  /* Description Textarea */
+  textarea.form-control {
+    min-height: 150px;
+    resize: vertical;
+  }
+  
+  /* Submit Button */
+  .btn-primary {
+    background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+    border: none;
+    border-radius: 8px;
+    padding: 12px 30px;
+    font-weight: 600;
+    font-size: 16px;
+    box-shadow: 0 4px 6px rgba(78, 115, 223, 0.3);
+    transition: all 0.3s;
+  }
+  
+  .btn-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 7px 14px rgba(78, 115, 223, 0.4);
+  }
+
+  .profile-sidebar-img {
+    width: 60px !important;
+    height: 60px !important;
+    object-fit: cover;
+    border-radius: 50% !important;
+    border: 2px solid #e2e8f0;
+    box-shadow: 0 2px 8px rgba(78, 115, 223, 0.08);
+    background: #fff;
+  }
+
+  /* Map picker styles */
+  .maplibre-container {
+    width: 100%;
+    height: 360px;
+    border: 1px solid #e2e8f0;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.03);
+  }
+  #seller-map-search {
+    border-radius: 8px 0 0 8px;
+    font-size: 15px;
+    min-width: 0;
+  }
+  #seller-map-search-btn {
+    border-radius: 0 8px 8px 0;
+    font-size: 15px;
+  }
+/* Business Type Select Styling */
+.business-type-select option {
+    padding: 10px 15px;
+    font-size: 15px;
+}
+
+/* Business Specific Fields Animation */
+.service-field, .food-field, .product-field {
+    transition: all 0.3s ease-in-out;
+}
+
+/* Role Switching Button Styles */
+.btn-outline-warning {
+    border-color: #f6ad55;
+    color: #dd6b20;
+}
+
+.btn-outline-warning:hover {
+    background-color: #f6ad55;
+    color: white;
+}
+
+.btn-outline-success {
+    border-color: #68d391;
+    color: #38a169;
+}
+
+.btn-outline-success:hover {
+    background-color: #68d391;
+    color: white;
+}
+
+/* Enhanced Form Section Transitions */
+.form-section {
+    transition: all 0.3s ease;
+}
+
+.form-section:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+}
+</style>
+{% endblock %}

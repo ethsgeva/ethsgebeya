@@ -1,0 +1,27 @@
+{% extends 'ethsgebeya/base.html' %}
+{% block content %}
+<h2>Available Deliveries</h2>
+<p>Jobs you can claim:</p>
+<table class="table">
+  <thead>
+    <tr>
+      <th>Tracking</th><th>Order</th><th>Seller</th><th>Pickup</th><th>Dropoff</th><th></th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for d in deliveries %}
+    <tr>
+      <td>{{ d.tracking_code }}</td>
+      <td>#{{ d.order.id }} - {{ d.order.product.title }}</td>
+      <td>{{ d.order.product.seller.company_name }}</td>
+      <td>{{ d.pickup_address|default:'-' }}</td>
+      <td>{{ d.delivery_address|default:'-' }}</td>
+      <td><a class="btn btn-primary btn-sm" href="{% url 'claim_delivery' d.id %}">Claim</a></td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="6">No deliveries available to claim now.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+<a href="{% url 'courier_dashboard' %}" class="btn btn-secondary">Back to Dashboard</a>
+{% endblock %}

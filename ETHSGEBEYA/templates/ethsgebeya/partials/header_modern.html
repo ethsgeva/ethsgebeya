@@ -1,0 +1,136 @@
+{% load static %}
+<!-- Modern Global Header (shared across pages) -->
+<style>
+    /* Profile dropdown styles scoped to header */
+    .profile-wrap { position: relative; }
+    .profile-trigger { display:flex; align-items:center; gap:10px; padding:10px 14px; border:2px solid #0B78FF; background:#fff; color:#0B78FF; border-radius:28px; cursor:pointer; font-weight:600; box-shadow:0 2px 8px rgba(11,120,255,.15); }
+    .profile-trigger:hover { background:#0B78FF; color:#fff; }
+    .profile-trigger .avatar { width:32px; height:32px; border-radius:50%; object-fit:cover; box-shadow:0 1px 4px rgba(0,0,0,.2); }
+    .profile-trigger .label { display:flex; flex-direction:column; line-height:1; }
+    .profile-trigger .label .name { font-size:.95rem; }
+    .profile-trigger .label .role { font-size:.75rem; opacity:.85; }
+    .profile-menu { position:absolute; right:0; top:calc(100% + 10px); width:280px; background:#fff; border:1px solid #e5e7eb; border-radius:14px; box-shadow:0 12px 24px rgba(0,0,0,.12); padding:10px 0; z-index:1100; }
+    .profile-menu .menu-head { display:flex; align-items:center; gap:12px; padding:12px 16px; border-bottom:1px solid #f1f5f9; }
+    .profile-menu .menu-head img { width:44px; height:44px; border-radius:50%; object-fit:cover; }
+    .profile-menu .menu-head .title { font-weight:700; color:#0B78FF; font-size:1rem; }
+    .profile-menu .menu-head .subtitle { font-size:.85rem; color:#64748b; }
+    .profile-menu a, .profile-menu form button { display:flex; align-items:center; gap:10px; width:100%; padding:12px 16px; background:none; border:none; text-align:left; color:#111827; text-decoration:none; font-weight:600; }
+    .profile-menu a:hover, .profile-menu form button:hover { background:#f8fafc; }
+    .profile-menu .divider { height:1px; background:#f1f5f9; margin:6px 0; }
+    
+    /* Logo size styles */
+    .logo-main img {
+        height: 60px !important;
+        width: auto !important;
+        border-radius: 12px;
+    }
+    
+    @media (max-width: 480px) { 
+        .profile-trigger .label { display:none; } 
+        .logo-main img {
+            height: 50px !important;
+        }
+    }
+
+    /* Center dropdown under profile icon and keep it inside viewport on small screens */
+    @media (max-width: 768px) {
+        .profile-wrap { position: relative; }
+        .profile-menu {
+            left: 50%;
+            right: auto;
+            transform: translateX(-50%);
+            width: min(320px, calc(100vw - 16px));
+            max-width: calc(100vw - 16px);
+            top: calc(100% + 10px);
+        }
+        .logo-main img {
+            height: 55px !important;
+        }
+    }
+</style>
+<nav class="navbar-main">
+    <div class="container">
+        <div class="nav-main-content">
+            <a href="/" class="logo-main">
+                <img src="{% static 'img/logo.png' %}" alt="ETHSGEBEYA Logo">
+                ETHSGEBEYA
+            </a>
+            <div class="nav-main-actions">
+                <form class="search-bar" action="{% url 'product_list' %}" method="get" role="search">
+                    <input type="text" name="q" placeholder="Search products, food, services...">
+                    <button class="search-button" type="submit"><i class="fas fa-search"></i> Search</button>
+                </form>
+                                 <div class="auth-buttons">
+                                     <div class="profile-wrap">
+                                         <button id="profileToggle" class="profile-trigger" type="button" aria-haspopup="true" aria-expanded="false">
+                                             <img class="avatar" src="{% if user.is_authenticated %}{% if request.user.sellerprofile.create_logo %}{{ request.user.sellerprofile.create_logo.url }}{% elif request.user.profile.profile_img %}{{ request.user.profile.profile_img.url }}{% else %}{% static 'img/profile_img.jpg' %}{% endif %}{% else %}{% static 'img/profile_img.jpg' %}{% endif %}" alt="Profile">
+                                             <span class="label">
+                                                 {% if user.is_authenticated %}
+                                                     <span class="name">{{ request.user.get_full_name|default:request.user.username|truncatechars:16 }}</span>
+                                                     <span class="role">{{ request.user.profile.role|capfirst }}</span>
+                                                 {% else %}
+                                                     <span class="name">Profile</span>
+                                                     <span class="role">Guest</span>
+                                                 {% endif %}
+                                             </span>
+                                             <i class="fas fa-chevron-down" aria-hidden="true"></i>
+                                         </button>
+                                         <div id="profileMenu" class="profile-menu" style="display:none;" role="menu" aria-labelledby="profileToggle">
+                                             {% if user.is_authenticated %}
+                                                 <div class="menu-head">
+                                                     <img src="{% if request.user.sellerprofile.create_logo %}{{ request.user.sellerprofile.create_logo.url }}{% elif request.user.profile.profile_img %}{{ request.user.profile.profile_img.url }}{% else %}{% static 'img/profile_img.jpg' %}{% endif %}" alt="Profile">
+                                                     <div>
+                                                         <div class="title">{{ request.user.get_full_name|default:request.user.username }}</div>
+                                                         <div class="subtitle">{{ request.user.profile.role|capfirst }} Account</div>
+                                                     </div>
+                                                 </div>
+                                                 <a href="{% url 'setting' %}" role="menuitem"><i class="fas fa-cog"></i> Settings</a>
+                                                 <a href="{% url 'setting' %}#profile" role="menuitem"><i class="fas fa-user-cog"></i> Edit Profile</a>
+                                                 <a href="{% url 'contact' %}" role="menuitem"><i class="fas fa-question-circle"></i> Help Center</a>
+                                                 <a href="{% url 'settings_orders_page' %}" role="menuitem"><i class="fas fa-list"></i> Orders &amp; Wishlist</a>
+                                                 <div class="divider"></div>
+                                                 <form method="post" action="{% url 'sign-out' %}" role="none" style="margin:0;">
+                                                     {% csrf_token %}
+                                                     <button type="submit" role="menuitem" style="color:#b91c1c;"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                                                 </form>
+                                             {% else %}
+                                                 <a href="{% url 'sign-in' %}" role="menuitem"><i class="fas fa-sign-in-alt"></i> Sign In</a>
+                                                 <a href="{% url 'sign-up' %}" role="menuitem"><i class="fas fa-user-plus"></i> Sign Up</a>
+                                             {% endif %}
+                                         </div>
+                                     </div>
+                                 </div>
+            </div>
+        </div>
+    </div>
+            
+    
+</nav>
+
+<nav class="navbar-secondary">
+    <div class="container">
+        <div class="nav-secondary-content">
+            <div class="business-types-nav">
+                <a href="{% url 'product_list' %}" class="active">Products</a>
+                <a href="#">Food</a>
+                <a href="#">Services</a>
+            </div>
+            <div class="nav-extra">
+                <a href="#"><i class="fas fa-building"></i> Companies</a>
+                <a href="#"><i class="fas fa-heart"></i> Wishlist</a>
+            </div>
+        </div>
+    </div>
+</nav>
+<script>
+    (function(){
+        const toggle = document.getElementById('profileToggle');
+        const menu = document.getElementById('profileMenu');
+        if (!toggle || !menu) return;
+        function close(){ menu.style.display = 'none'; toggle.setAttribute('aria-expanded','false'); }
+        function open(){ menu.style.display = 'block'; toggle.setAttribute('aria-expanded','true'); }
+        toggle.addEventListener('click', function(e){ e.stopPropagation(); if (menu.style.display === 'block') { close(); } else { open(); } });
+        document.addEventListener('click', function(e){ if (!menu.contains(e.target) && e.target !== toggle && !toggle.contains(e.target)) close(); });
+        document.addEventListener('keydown', function(e){ if (e.key === 'Escape') close(); });
+    })();
+</script>

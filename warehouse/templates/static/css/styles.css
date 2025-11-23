@@ -1,0 +1,173 @@
+/* Add your custom styles here */
+
+body {
+  padding-top: 56px; /* Account for fixed navbar */
+  overflow-x: hidden; /* Prevent horizontal scrollbar */
+}
+
+.sidebar {
+  position: fixed;
+  top: 56px;
+  bottom: 0;
+  left: 0;
+  z-index: 100;
+  padding: 48px 0 0;
+  box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
+  width: 250px; /* Set a fixed width for the sidebar */
+}
+
+.sidebar-sticky {
+  position: relative;
+  top: 0;
+  height: calc(100vh - 56px);
+  padding-top: .5rem;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+@supports ((position: -webkit-sticky) or (position: sticky)) {
+  .sidebar-sticky {
+      position: -webkit-sticky;
+      position: sticky;
+  }
+}
+
+.sidebar .nav-link {
+  font-weight: 500;
+  color: #333;
+}
+
+.sidebar .nav-link .feather {
+  margin-right: 4px;
+  color: #727272;
+}
+
+.sidebar .nav-link.active {
+  color: #007bff;
+}
+
+.sidebar .nav-link:hover .feather,
+.sidebar .nav-link.active .feather {
+  color: inherit;
+}
+
+.sidebar-heading {
+  font-size: .75rem;
+  text-transform: uppercase;
+}
+
+main {
+margin-left: 250px; /* Adjust main content margin to match sidebar width */
+}
+
+@media (max-width: 767.98px) {
+  .sidebar {
+    width: 100%;
+    left: 0;
+    top: 56px;
+    height: auto;
+    position: relative;
+    box-shadow: none;
+  }
+  main {
+    margin-left: 0;
+    width: 100%;
+  }
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+.container, main, .content {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+html, body {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+.footer {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  background-color: #f5f5f5;
+}
+
+/* Responsive breakpoints for common devices */
+
+/* Desktop: 1920x1080, 1536x864, 1366x768 */
+@media (max-width: 1920px) {
+  html, body, .container, main, .content {
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+}
+@media (max-width: 1536px) {
+  .container, main, .content {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+@media (max-width: 1366px) {
+  .container, main, .content {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+/* Tablet: 820x1180, 810x1080, 768x1024 */
+@media (max-width: 1180px) {
+  .container, main, .content {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+  .sidebar {
+    width: 100%;
+    position: relative;
+    box-shadow: none;
+  }
+  main {
+    margin-left: 0;
+    width: 100%;
+  }
+}
+
+/* Mobile: 393x873, 390x844, 360x800 */
+@media (max-width: 873px) {
+  .container, main, .content {
+    padding-left: 0.25rem;
+    padding-right: 0.25rem;
+  }
+  .sidebar {
+    width: 100%;
+    position: relative;
+    box-shadow: none;
+  }
+  main {
+    margin-left: 0;
+    width: 100%;
+  }
+  .footer {
+    position: static;
+  }
+}
+
+/* Extra mobile tweaks */
+@media (max-width: 480px) {
+  .container, main, .content {
+    padding: 0;
+  }
+  .navbar-brand img {
+    height: 32px;
+    margin-right: 6px;
+  }
+  .footer {
+    font-size: 0.85rem;
+    padding: 10px 0;
+  }
+}

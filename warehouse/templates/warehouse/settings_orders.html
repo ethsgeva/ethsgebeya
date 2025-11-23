@@ -1,0 +1,435 @@
+{% extends 'warehouse/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-4 text-center" style="font-weight:700; color:#212529; letter-spacing:1px;">Settings & Orders</h2>
+    <div class="row">
+        <div class="col-12 col-md-3 mb-3 mb-md-0">
+            <div class="list-group mb-4 shadow-sm rounded-3">
+                <a href="{% url 'setting' %}" class="list-group-item list-group-item-action">Profile Settings</a>
+                <a href="{% url 'settings_orders_page' %}" class="list-group-item list-group-item-action active">Orders & Wishlist</a>
+            </div>
+        </div>
+        <div class="col-12 col-md-9">
+            {% if role == 'buyer' %}
+                <div class="card shadow-sm mb-4 border-0 rounded-4">
+                    <div class="card-body">
+                        <h4 class="mb-3" style="color:#36b9cc; font-weight:600;">Your Cart</h4>
+                        {% if cart and cart|length > 0 %}
+                            <ul class="list-group mb-4">
+                                {% for item in cart %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center border-0 border-bottom py-3" style="background:rgba(54,185,204,0.04);">
+                                    <span class="d-flex align-items-center">
+                                        {% if item.product.images.all %}
+                                            <img src="{{ item.product.images.all.0.image.url }}" alt="{{ item.product.title }}" style="width: 60px; height: 60px; object-fit: cover; margin-right: 16px; border-radius: 10px; box-shadow:0 2px 8px rgba(54,185,204,0.12);">
+                                        {% endif %}
+                                        <div>
+                                            <a href="{% url 'product_detail' item.product.id %}" class="fw-bold text-decoration-none" style="font-size:1.1rem; color:#212529;">{{ item.product.title }}</a>
+                                            <div class="small text-muted">x{{ item.quantity }} &middot; <span style="color:#36b9cc; font-weight:500;">ETB {{ item.total_price }}</span></div>
+                                        </div>
+                                    </span>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <a href="#" class="btn btn-sm btn-success px-3 rounded-pill" style="font-weight:500;" onclick="showToast('Placing orders is coming soon! Stay tuned for this feature.', 'info'); return false;">Place Order</a>
+                                        <form method="post" action="{% url 'cart_remove' product_id=item.product.id %}" class="d-inline">{% csrf_token %}
+                                            <button type="submit" class="btn btn-sm btn-outline-danger px-3 rounded-pill">Remove</button>
+                                        </form>
+                                    </div>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p class="text-center text-muted">Your cart is empty.</p>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card shadow-sm mb-4 border-0 rounded-4">
+                    <div class="card-body">
+                        <h4 class="mb-3" style="color:#f6c23e; font-weight:600;">Your Wishlist</h4>
+                        {% with wishlist=request.user.wishlists.first %}
+                        {% if wishlist and wishlist.products.all %}
+                            <ul class="list-group mb-4">
+                                {% for product in wishlist.products.all %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center border-0 border-bottom py-3" style="background:rgba(246,194,62,0.06);">
+                                    <span class="d-flex align-items-center">
+                                        {% if product.images.all %}
+                                            <img src="{{ product.images.all.0.image.url }}" alt="{{ product.title }}" style="width: 60px; height: 60px; object-fit: cover; margin-right: 16px; border-radius: 10px; box-shadow:0 2px 8px rgba(246,194,62,0.12);">
+                                        {% endif %}
+                                        <div>
+                                            <a href="{% url 'product_detail' product.id %}" class="fw-bold text-decoration-none" style="font-size:1.1rem; color:#212529;">{{ product.title }}</a>
+                                        </div>
+                                    </span>
+                                    <form method="post" action="{% url 'remove_from_wishlist' %}" class="d-inline">{% csrf_token %}
+                                        <input type="hidden" name="product_id" value="{{ product.id }}">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger px-3 rounded-pill">Remove</button>
+                                    </form>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p class="text-center text-muted">Your wishlist is empty.</p>
+                        {% endif %}
+                        {% endwith %}
+                    </div>
+                </div>
+                <!-- Orders Section: Pending, Waiting, Completed, All -->
+                <div class="row g-4">
+                    <div class="col-12 col-lg-6">
+                        <div class="card shadow-sm border-0 rounded-4 h-100">
+                            <div class="card-body">
+                                <h4 class="mb-3" style="color:#858796; font-weight:600;">Pending Orders</h4>
+                                {% if pending_orders %}
+                                    <ul class="list-group mb-4">
+                                        {% for order in pending_orders %}
+                                        <li class="list-group-item d-flex justify-content-between align-items-center border-0 border-bottom py-3" style="background:rgba(133,135,150,0.06);">
+                                            <span>
+                                                <span class="fw-bold">{{ order.product.title }}</span> (x{{ order.quantity }}) - <span style="color:#858796;">${{ order.total_price }}</span>
+                                            </span>
+                                            <span class="badge bg-secondary">Pending</span>
+                                            <span class="text-muted small">{{ order.created_at|date:'Y-m-d H:i' }}</span>
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                {% else %}
+                                    <p class="text-center text-muted">No pending orders.</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-6">
+                        <div class="card shadow-sm border-0 rounded-4 h-100">
+                            <div class="card-body">
+                                <h4 class="mb-3" style="color:#f6c23e; font-weight:600;">Orders Waiting for Your Confirmation</h4>
+                                {% if waiting_orders %}
+                                    <ul class="list-group mb-4">
+                                        {% for order in waiting_orders %}
+                                        <li class="list-group-item d-flex justify-content-between align-items-center border-0 border-bottom py-3" style="background:rgba(246,194,62,0.06);">
+                                            <span>
+                                                <span class="fw-bold">{{ order.product.title }}</span> (x{{ order.quantity }}) - <span style="color:#f6c23e;">${{ order.total_price }}</span>
+                                            </span>
+                                            <span class="badge bg-warning text-dark">Waiting for Your Confirmation</span>
+                                            <button class="btn btn-warning btn-sm ms-2 rounded-pill" onclick="confirmOrderComplete('{{ order.id }}')">Confirm Completion</button>
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                {% else %}
+                                    <p class="text-center text-muted">No orders waiting for your confirmation.</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card shadow-sm mt-4 border-0 rounded-4">
+                    <div class="card-body">
+                        <h4 class="mb-3" style="color:#1cc88a; font-weight:600;">Completed Orders</h4>
+                        {% if completed_orders %}
+                            <ul class="list-group mb-4">
+                                {% for order in completed_orders %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center border-0 border-bottom py-3" style="background:rgba(28,200,138,0.06);">
+                                    <span>
+                                        <span class="fw-bold">{{ order.product.title }}</span> (x{{ order.quantity }}) - <span style="color:#1cc88a;">${{ order.total_price }}</span>
+                                    </span>
+                                    <span class="badge bg-success">Completed</span>
+                                    <span class="text-muted small">{{ order.created_at|date:'Y-m-d H:i' }}</span>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p class="text-center text-muted">No completed orders yet.</p>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card shadow-sm mt-4 border-0 rounded-4">
+                    <div class="card-body">
+                        <h4 class="mb-3" style="color:#212529; font-weight:600;">All Orders</h4>
+                        {% if buyer_orders %}
+                            <ul class="list-group mb-4">
+                                {% for order in buyer_orders %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center border-0 border-bottom py-3" style="background:rgba(33,37,41,0.04);">
+                                    <span>
+                                        <span class="fw-bold">{{ order.product.title }}</span> (x{{ order.quantity }}) - <span style="color:#212529;">${{ order.total_price }}</span>
+                                    </span>
+                                    <span class="badge bg-secondary">{{ order.get_status_display }}</span>
+                                    <span class="text-muted small">{{ order.created_at|date:'Y-m-d H:i' }}</span>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p class="text-center text-muted">No orders found.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            {% elif role == 'seller' %}
+                <h2 class="mb-4 d-flex align-items-center gap-2" style="color:#224abe;font-weight:700;">
+                  <i class="fas fa-clipboard-list" style="color:#36b9cc;"></i> Seller Orders
+                  <span class="badge bg-success" style="font-size:1rem;">Live</span>
+                </h2>
+                <div class="row g-4">
+                    <div class="col-12 col-lg-6">
+                        <div class="card shadow-sm border-0 rounded-4 h-100 animate__animated animate__fadeInUp">
+                            <div class="card-body">
+                                <h4 class="mb-3" style="color:#858796; font-weight:600;">New Orders (Pending)</h4>
+                                {% if seller_pending_orders %}
+                                    <ul class="list-group mb-4">
+                                        {% for order in seller_pending_orders %}
+                                        <li class="list-group-item d-flex justify-content-between align-items-center border-0 border-bottom py-3" style="background:rgba(133,135,150,0.06);">
+                                            <span>
+                                                <span class="fw-bold" style="color:#224abe;">{{ order.product.title }}</span> (x{{ order.quantity }}) - <span style="color:#858796;">${{ order.total_price }}</span>
+                                                <span class="text-muted small ms-2">by {{ order.user.username }}</span>
+                                            </span>
+                                            <span class="badge bg-secondary">Pending</span>
+                                            <button class="btn btn-success btn-sm ms-2 animate__animated animate__pulse animate__infinite" onclick="markOrderAsCompleted('{{ order.id }}')">
+                                                <i class="fas fa-check-circle me-1"></i>Mark as Completed
+                                            </button>
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                {% else %}
+                                    <p class="text-center text-muted">No new orders.</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-6">
+                        <div class="card shadow-sm border-0 rounded-4 h-100 animate__animated animate__fadeInUp">
+                            <div class="card-body">
+                                <h4 class="mb-3" style="color:#f6c23e; font-weight:600;">Orders Waiting for Buyer Confirmation</h4>
+                                {% if seller_waiting_orders %}
+                                    <ul class="list-group mb-4">
+                                        {% for order in seller_waiting_orders %}
+                                        <li class="list-group-item d-flex justify-content-between align-items-center border-0 border-bottom py-3" style="background:rgba(246,194,62,0.06);">
+                                            <span>
+                                                <span class="fw-bold" style="color:#f6c23e;">{{ order.product.title }}</span> (x{{ order.quantity }}) - <span style="color:#f6c23e;">${{ order.total_price }}</span>
+                                                <span class="text-muted small ms-2">by {{ order.user.username }}</span>
+                                            </span>
+                                            <span class="badge bg-warning text-dark">Waiting for Buyer Confirmation</span>
+                                            <span class="ms-2 text-info"><i class="fas fa-info-circle"></i> Waiting for buyer to confirm completion.</span>
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                {% else %}
+                                    <p class="text-center text-muted">No orders waiting for buyer confirmation.</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card shadow-sm mt-4 border-0 rounded-4 animate__animated animate__fadeInUp">
+                    <div class="card-body">
+                        <h4 class="mb-3" style="color:#1cc88a; font-weight:600;">Completed Orders</h4>
+                        {% if seller_completed_orders %}
+                            <ul class="list-group mb-4">
+                                {% for order in seller_completed_orders %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center border-0 border-bottom py-3" style="background:rgba(28,200,138,0.06);">
+                                    <span>
+                                        <span class="fw-bold" style="color:#1cc88a;">{{ order.product.title }}</span> (x{{ order.quantity }}) - <span style="color:#1cc88a;">${{ order.total_price }}</span>
+                                        <span class="text-muted small ms-2">by {{ order.user.username }}</span>
+                                    </span>
+                                    <span class="badge bg-success">Completed</span>
+                                    <span class="text-muted small">{{ order.created_at|date:'Y-m-d H:i' }}</span>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p class="text-center text-muted">No completed orders yet.</p>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card shadow-sm mt-4 border-0 rounded-4 animate__animated animate__fadeInUp">
+                    <div class="card-body">
+                        <h4 class="mb-3" style="color:#212529; font-weight:600;">All Orders</h4>
+                        {% if seller_orders %}
+                            <ul class="list-group mb-4">
+                                {% for order in seller_orders %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center border-0 border-bottom py-3" style="background:rgba(33,37,41,0.04);">
+                                    <span>
+                                        <span class="fw-bold" style="color:#224abe;">{{ order.product.title }}</span> (x{{ order.quantity }}) - <span style="color:#212529;">${{ order.total_price }}</span>
+                                        <span class="text-muted small ms-2">by {{ order.user.username }}</span>
+                                    </span>
+                                    <span class="badge bg-secondary">{{ order.get_status_display }}</span>
+                                    <span class="text-muted small">{{ order.created_at|date:'Y-m-d H:i' }}</span>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p class="text-center text-muted">No orders for your products yet.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% if messages %}
+  <div id="centered-django-messages">
+    {% for message in messages %}
+      <div class="centered-message {{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+  </div>
+  <script>
+    // Auto-hide Django messages after 7s (was 3.5s)
+    setTimeout(function() {
+      const msgDiv = document.getElementById('centered-django-messages');
+      if (msgDiv) msgDiv.style.display = 'none';
+    }, 7000);
+  </script>
+{% endif %}
+<!--
+To use this notification overlay on all pages, copy the Django messages block and CSS to your base.html or any template.
+Include the .centered-message and #centered-django-messages CSS for consistent style.
+-->
+<style>
+/* Centered notification overlay styles */
+#centered-notification {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    min-width: 320px;
+    max-width: 90vw;
+    z-index: 3000;
+    background: rgba(255,255,255,0.98);
+    border-radius: 18px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+    padding: 32px 24px 24px 24px;
+    text-align: center;
+    font-size: 1.15rem;
+    font-weight: 500;
+    transition: opacity 0.3s;
+    border: 2px solid #eee;
+}
+#centered-notification.success { border-color: #28a745; color: #28a745; }
+#centered-notification.danger { border-color: #dc3545; color: #dc3545; }
+#centered-notification.info { border-color: #0d6efd; color: #0d6efd; }
+#centered-notification .close-btn {
+    position: absolute;
+    top: 10px;
+    right: 18px;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: #888;
+    cursor: pointer;
+}
+#centered-django-messages {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 4000;
+    min-width: 320px;
+    max-width: 90vw;
+    text-align: center;
+}
+.centered-message {
+    display: inline-block;
+    background: rgba(255,255,255,0.98);
+    border-radius: 18px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+    padding: 24px 18px 18px 18px;
+    font-size: 1.1rem;
+    font-weight: 500;
+    margin: 0.5rem 0;
+    border: 2px solid #eee;
+    transition: opacity 0.3s;
+}
+.centered-message.success { border-color: #28a745; color: #28a745; }
+.centered-message.error, .centered-message.danger { border-color: #dc3545; color: #dc3545; }
+.centered-message.info { border-color: #0d6efd; color: #0d6efd; }
+@media (max-width: 600px) {
+    #centered-notification { min-width: 80vw; padding: 18px 8px 18px 8px; font-size: 1rem; }
+    #centered-notification .close-btn { right: 8px; }
+    #centered-django-messages, .centered-message { min-width: 80vw; font-size: 1rem; }
+}
+</style>
+<div id="centered-notification"><button class="close-btn" onclick="hideNotification()">&times;</button><span id="centered-notification-message"></span></div>
+<script>
+function showToast(message, type='info') {
+    // Use new centered notification overlay
+    const notif = document.getElementById('centered-notification');
+    const msg = document.getElementById('centered-notification-message');
+    notif.className = type;
+    msg.innerHTML = message;
+    notif.style.display = 'block';
+    notif.style.opacity = 1;
+    // Auto-hide after 3.5s unless user closes
+    if (notif._timeout) clearTimeout(notif._timeout);
+    notif._timeout = setTimeout(() => { hideNotification(); }, 3500);
+}
+function hideNotification() {
+    const notif = document.getElementById('centered-notification');
+    notif.style.opacity = 0;
+    setTimeout(() => { notif.style.display = 'none'; }, 300);
+}
+function showOrderDetail(orderId) {
+    document.getElementById('order-detail-' + orderId).style.display = 'block';
+}
+function hideOrderDetail(orderId) {
+    document.getElementById('order-detail-' + orderId).style.display = 'none';
+}
+function requestOrderComplete(orderId, buyerId) {
+        fetch(`/warehouse/order/${orderId}/request-complete/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({buyer_id: buyerId})
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast('Completion request sent to buyer.', 'success');
+                hideOrderDetail(orderId);
+            } else {
+                showToast('Error: ' + data.error, 'danger');
+            }
+        });
+}
+function confirmOrderComplete(orderId) {
+    // Show notification immediately
+    showToast('Order marked as completed. Thank you for confirming!', 'success');
+    fetch(`/warehouse/order/${orderId}/confirm-complete/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (!data.success) {
+            showToast('Error: ' + data.error, 'danger');
+        }
+        // Move order from waiting_orders to completed_orders in DOM
+        const waitingList = document.querySelector('h4:contains("Orders Waiting for Your Confirmation") + ul');
+        const completedList = document.querySelector('h4:contains("Completed Orders") + ul');
+        const allOrdersList = document.querySelector('h4:contains("All Orders") + ul');
+        let li = null;
+        if (waitingList) {
+            li = waitingList.querySelector(`li.list-group-item button[onclick*="confirmOrderComplete('${orderId}')"]`);
+            if (li) li = li.closest('li');
+        }
+        if (li && completedList) {
+            // Remove from waiting
+            li.parentNode.removeChild(li);
+            // Create new completed order li
+            const completedLi = document.createElement('li');
+            completedLi.className = 'list-group-item';
+            completedLi.innerHTML = `${li.innerHTML.replace('Waiting for Your Confirmation', 'Completed').replace('btn btn-warning btn-sm ms-2', '').replace('onclick=\"confirmOrderComplete(\'${orderId}\')\"', '')}<span class=\"badge bg-success\">Completed</span>`;
+            completedList.appendChild(completedLi);
+        }
+        // Also update All Orders badge if present
+        if (li && allOrdersList) {
+            const allLi = allOrdersList.querySelector(`li.list-group-item:has(span.badge.bg-secondary:contains("Pending"))`);
+            if (allLi) {
+                allLi.querySelector('span.badge').classList.remove('bg-secondary');
+                allLi.querySelector('span.badge').classList.add('bg-success');
+                allLi.querySelector('span.badge').innerText = 'Completed';
+            }
+        }
+    });
+}
+</script>
+{% endblock %}

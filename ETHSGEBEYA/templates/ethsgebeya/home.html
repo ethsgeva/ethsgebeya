@@ -1,0 +1,104 @@
+{% extends 'ethsgebeya/public_base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="home-page">
+  <!-- Hero -->
+  <section class="hero text-center">
+    <div class="container">
+      <h1 class="title">Welcome to ETHSGEBEYA</h1>
+      <p class="subtitle">Ethiopia's trusted marketplace for products, food, and services. Buy local, sell fast with secure payments and reliable delivery.</p>
+      <a href="{% url 'product_list' %}" class="btn btn-primary btn-lg">Start Shopping</a>
+    </div>
+  </section>
+
+  <!-- Key Features -->
+  <section class="features">
+    <div class="container">
+      <h2 class="section-heading">Our Key Features</h2>
+      <div class="row g-3 g-md-4">
+        <div class="col-12 col-sm-6 col-lg-3">
+          <div class="card feature-card">
+            <div class="icon"><i class="fas fa-bolt"></i></div>
+            <h5>Fast & Easy</h5>
+            <p>List and find products in seconds. Simple checkout and quick delivery.</p>
+          </div>
+        </div>
+        <div class="col-12 col-sm-6 col-lg-3">
+          <div class="card feature-card">
+            <div class="icon"><i class="fas fa-shield-alt"></i></div>
+            <h5>Secure</h5>
+            <p>Your data and payments are protected with industry best practices.</p>
+          </div>
+        </div>
+        <div class="col-12 col-sm-6 col-lg-3">
+          <div class="card feature-card">
+            <div class="icon"><i class="fas fa-globe"></i></div>
+            <h5>For Everyone</h5>
+            <p>Buyers and sellers of all sizes are welcome. Local support, local focus.</p>
+          </div>
+        </div>
+        <div class="col-12 col-sm-6 col-lg-3">
+          <div class="card feature-card">
+            <div class="icon"><i class="fas fa-chart-line"></i></div>
+            <h5>Grow Your Business</h5>
+            <p>Analytics, tools, and support to help you succeed as a seller.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- What We Offer -->
+  <section class="offers">
+    <div class="container">
+      <h2 class="section-heading">What We Offer</h2>
+      <div class="row g-3 g-md-4">
+        <div class="col-12 col-md-4">
+          <div class="card offer-card">
+            <div class="icon"><i class="fas fa-shopping-bag"></i></div>
+            <h5>Shop Products</h5>
+            <p>Discover thousands of products from local sellers. From electronics to fashion, find everything you need.</p>
+            <a href="{% url 'product_list' %}" class="btn btn-outline-primary">Browse Products</a>
+          </div>
+        </div>
+        <div class="col-12 col-md-4">
+          <div class="card offer-card">
+            <div class="icon"><i class="fas fa-utensils"></i></div>
+            <h5>Order Food</h5>
+            <p>Enjoy delicious meals from your favorite local restaurants and cafes. Fast delivery to your doorstep.</p>
+            <a href="{% url 'product_list' %}" class="btn btn-outline-primary">Find Food</a>
+          </div>
+        </div>
+        <div class="col-12 col-md-4">
+          <div class="card offer-card">
+            <div class="icon"><i class="fas fa-tools"></i></div>
+            <h5>Find Services</h5>
+            <p>Connect with trusted professionals for repairs, cleaning, tech support, and other services.</p>
+            <a href="{% url 'product_list' %}" class="btn btn-outline-primary">Find Services</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<style>
+  :root{ --primary:#0d6efd; --bg:#f8f9fa; --text:#1f2937; --muted:#6b7280; }
+  .home-page{ background: var(--bg); }
+  .hero{ background: linear-gradient(135deg,#0d6efd 0%, #2563eb 100%); color:#fff; padding: 64px 0; }
+  .hero .title{ font-weight:800; margin-bottom: 12px; }
+  .hero .subtitle{ max-width: 740px; margin: 0 auto 20px; color: #e9eefb; }
+  .section-heading{ text-align:center; font-weight:800; margin-bottom: 20px; color:#0d335f; }
+  .features, .offers{ padding: 36px 0; }
+  .feature-card, .offer-card{ padding: 18px; border:1px solid #e5e7eb; border-radius: 12px; height:100%; background:#fff; }
+  .feature-card .icon, .offer-card .icon{ width:48px; height:48px; display:flex; align-items:center; justify-content:center; border-radius:10px; background:#eef2ff; color:#1d4ed8; font-size:22px; margin-bottom:8px; }
+  .feature-card h5, .offer-card h5{ font-weight:800; color: var(--text); margin-bottom:6px; }
+  .feature-card p, .offer-card p{ color: var(--muted); font-size:14px; }
+  @media (max-width: 480px){
+    .hero{ padding: 42px 0; }
+    .hero .title{ font-size: 28px; }
+    .hero .subtitle{ font-size: 14px; }
+  }
+</style>
+{% endblock %}

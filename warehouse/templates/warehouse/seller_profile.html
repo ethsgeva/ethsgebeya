@@ -1,0 +1,764 @@
+{% extends 'ethsgebeya/public_base.html' %}
+{% load static %}
+{% load rating_tags %}
+
+{% block content %}
+<div class="company-page">
+  <div class="company-header">
+    <div class="company-logo" aria-label="{{ seller.company_name }} logo">
+      {% if seller.create_logo %}
+        <img src="{{ seller.create_logo.url }}" alt="{{ seller.company_name }} logo" style="width:100%;height:100%;object-fit:cover;border-radius:12px;"/>
+      {% else %}
+        <img src="{% static 'img/profile_img.jpg' %}" alt="Default store logo" style="width:100%;height:100%;object-fit:cover;border-radius:12px;"/>
+      {% endif %}
+    </div>
+    <div class="company-details">
+      <h1 class="company-name">{{ seller.company_name }}</h1>
+      
+      <div class="company-essentials" role="list" aria-label="Store contact and location">
+        {# Phone removed per request #}
+        {% if seller.opening_time and seller.closing_time %}
+        <span class="chip" role="listitem"><i class="far fa-clock"></i> {{ seller.opening_time }} – {{ seller.closing_time }}</span>
+        {% endif %}
+        {% if seller.address %}
+        <span class="chip" role="listitem"><i class="fas fa-map-marker-alt"></i> {{ seller.address }}</span>
+        {% endif %}
+      </div>
+      <div class="company-stats">
+        <div class="stat">
+          <div class="stat-number">{{ stats.products }}</div>
+          <div class="stat-label">Products</div>
+        </div>
+        <div class="stat">
+          <div class="stat-number" id="followers-count">{{ stats.followers }}</div>
+          <div class="stat-label">Followers</div>
+        </div>
+        <div class="stat">
+          <div class="stat-number">{{ stats.rating|floatformat:1 }}</div>
+          <div class="stat-label"><i class="fas fa-star"></i> Rating <span class="text-muted">({{ stats.rating_count }})</span></div>
+        </div>
+      </div>
+      <div class="action-buttons">
+        {% if request.user.is_authenticated and not is_own_store %}
+          <button id="follow-btn" class="btn {% if request.user in seller.followers.all %}btn-success{% else %}btn-outline{% endif %}">
+            <i class="fas {% if request.user in seller.followers.all %}fa-check{% else %}fa-user-plus{% endif %}"></i>
+            <span id="follow-text">{% if request.user in seller.followers.all %}Following{% else %}Follow{% endif %}</span>
+          </button>
+        {% else %}
+          <a class="btn btn-outline" href="{% url 'sign-in' %}"><i class="fas fa-user-plus"></i> Follow</a>
+        {% endif %}
+        {% if seller.contact_number %}
+          <a class="btn btn-primary" href="tel:{{ seller.contact_number|urlencode }}"><i class="fas fa-phone"></i> Contact</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="company-tabs">
+    <ul class="tabs">
+      <li class="tab active" data-tab="products"><i class="fas fa-box-open me-1"></i> Products</li>
+  <li class="tab" data-tab="about"><i class="fas fa-circle-info me-1"></i> About</li>
+  <li class="tab" data-tab="location"><i class="fas fa-map-location-dot me-1"></i> Location</li>
+      <li class="tab" data-tab="reviews"><i class="fas fa-star me-1"></i> Reviews</li>
+    </ul>
+  </div>
+
+  <div class="tab-content active" id="productsTab">
+    <div class="products-grid">
+      {% for product in products %}
+      <div class="product-card" onclick="window.location='{% url 'product_detail' product.id %}'">
+        <div class="product-image">
+          {% if product.images.first %}
+            <img src="{{ product.images.first.image.url }}" alt="{{ product.title }}" style="width:100%;height:100%;object-fit:cover;"/>
+          {% else %}
+            <i class="fas fa-box-open" aria-hidden="true" style="font-size:48px;color:var(--primary-blue);"></i>
+          {% endif %}
+        </div>
+        <div class="product-info">
+          <h3 class="product-name">{{ product.title }}</h3>
+          <div class="product-price">{{ product.price }} ETB</div>
+          {% if product.description %}
+            <p class="product-description">{{ product.description }}</p>
+          {% endif %}
+          {% with avg=product.get_average_rating %}
+          {% rating_breakdown avg as rb %}
+          <div class="product-meta">
+              <span class="rating" aria-label="Rating {{ avg|fmt_avg }}/5">
+                {% for _ in rb.full|times %}<i class="fas fa-star"></i>{% endfor %}
+                {% for _ in rb.half|times %}<i class="fas fa-star-half-alt"></i>{% endfor %}
+                {% for _ in rb.empty|times %}<i class="far fa-star"></i>{% endfor %}
+              </span>
+              <span class="small text-muted ms-1">{{ avg|fmt_avg }}/5</span>
+              <span class="ms-auto">{{ product.reviews.count }} review{{ product.reviews.count|pluralize }}</span>
+          </div>
+            {% if product.reviews.count %}
+              {% with last=product.reviews.all.0 %}
+              <div class="product-review-snippet text-muted mt-1" style="font-size: 12px; line-height: 1.4;">
+                <i class="far fa-comment-dots me-1"></i>
+                <strong>{{ last.user.get_full_name|default:last.user.username }}</strong>:
+                {{ last.text|truncatechars:90 }}
+              </div>
+              {% endwith %}
+            {% endif %}
+          {% endwith %}
+        </div>
+      </div>
+      {% empty %}
+        <p>No products yet.</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="tab-content" id="aboutTab">
+    <div class="about-section">
+      <h2 class="section-title">About {{ seller.company_name }}</h2>
+      <div class="about-content">
+        <div class="about-text">
+          {% if seller.description %}
+            <p>{{ seller.description|linebreaks }}</p>
+          {% else %}
+            <p>This store hasn't added a description yet.</p>
+          {% endif %}
+        </div>
+        <div class="contact-info">
+          <h3>Contact Information</h3>
+          {# Phone removed per request #}
+          {% if seller.address %}
+          <div class="contact-item"><i class="fas fa-map-marker-alt"></i><span>{{ seller.address }}</span></div>
+          {% endif %}
+          <div class="contact-item"><i class="far fa-clock"></i><span>Open {{ seller.opening_time }} - {{ seller.closing_time }}</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-content" id="locationTab">
+    <div class="map-section">
+      <h2 class="section-title">Our Location</h2>
+      <div class="map-container">
+          <div id="storeMap" style="width:100%; height:100%; border-radius:10px;"></div>
+      </div>
+      <div class="basemap-tools" style="margin-top:8px; display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:center;">
+        <div class="btn-group" role="group" aria-label="Basemap">
+          <button id="bmStreets" type="button" class="btn btn-outline">Streets</button>
+          <button id="bmSatellite" type="button" class="btn btn-outline">Satellite</button>
+        </div>
+        
+      </div>
+      <div id="mapHint" class="text-muted" style="font-size:12px; text-align:center; margin-top:6px; display:none;">
+        If imagery disappears at very high zoom, please zoom out a little to see details.
+      </div>
+      {% if seller.latitude and seller.longitude %}
+
+      
+      <div id="routeStepsWrap" style="margin-top:10px; display:none;">
+        <ol id="routeSteps" style="max-height: 180px; overflow:auto; padding-left: 22px; font-size: 14px; color: var(--text-dark);"></ol>
+      </div>
+      {% else %}
+      <div class="alert alert-warning mt-2" role="alert" style="margin-top:12px;">
+        Exact shop coordinates are not set yet. Add latitude/longitude in the seller settings to pinpoint the shop on the map.
+      </div>
+      {% endif %}
+      {% if seller.address %}
+      <div style="margin-top: 20px; text-align: center;">
+        <p><strong>Address:</strong> {{ seller.address }}</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="tab-content" id="reviewsTab">
+    <div class="reviews-section">
+  <h2 class="section-title">Customer Reviews ({{ stats.rating|floatformat:1 }} <i class="fas fa-star text-warning"></i>)</h2>
+      {% for r in recent_reviews %}
+      <div class="review-card">
+        <div class="review-header">
+          <div>
+            <div class="reviewer-name">{{ r.user.get_full_name|default:r.user.username }}</div>
+            <div class="review-rating">{{ r.rating }} ★</div>
+          </div>
+          <div class="review-date">{{ r.created_at|date:'M d, Y' }}</div>
+        </div>
+        <p>{{ r.text }}</p>
+      </div>
+      {% empty %}
+      <p>No reviews yet.</p>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+  :root { --primary-blue:#4A90E2; --light-blue:#E3F2FD; --dark-blue:#1565C0; --accent-yellow:#FFD700; --text-dark:#333; --text-light:#666; --white:#fff; --success-green:#28a745; --gray-bg:#f8f9fa; }
+  body { background: var(--gray-bg); }
+  .company-page { max-width: 1200px; margin: 0 auto; padding: 20px; }
+  .company-header { background: var(--white); border-radius: 15px; padding: 40px 30px 30px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; position: relative; }
+  .company-logo { width: 120px; height: 120px; border-radius: 15px; background: var(--light-blue); margin: 0 auto 20px; display:flex; align-items:center; justify-content:center; font-size:40px; box-shadow:0 4px 15px rgba(0,0,0,0.1); border:5px solid var(--white); overflow:hidden; }
+  .company-details { max-width: 600px; margin: 0 auto; }
+  .company-name { font-size: 32px; font-weight: 800; color: var(--dark-blue); margin-bottom: 15px; }
+  .company-description { color: var(--text-light); margin-bottom: 25px; font-size: 16px; line-height: 1.6; }
+  .company-essentials { display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-bottom: 20px; }
+  .chip{ background: var(--light-blue); color: var(--dark-blue); border: 1px solid rgba(21,101,192,.15); padding:6px 10px; border-radius:999px; font-weight:600; font-size: 14px; }
+  .company-stats { display:flex; gap:30px; margin-bottom:25px; justify-content:center; flex-wrap:wrap; }
+  .stat { text-align:center; }
+  .stat-number { font-size:24px; font-weight:800; color:var(--primary-blue); }
+  .stat-label { font-size:14px; color:var(--text-light); }
+  .action-buttons { display:flex; gap:15px; flex-wrap:wrap; justify-content:center; }
+  .btn { padding:12px 25px; border:none; border-radius:8px; cursor:pointer; font-weight:800; transition:all .2s ease; text-decoration:none; display:inline-flex; align-items:center; gap:8px; }
+  .btn-primary{ background:var(--primary-blue); color:#fff; }
+  .btn-outline{ background:transparent; color:var(--primary-blue); border:2px solid var(--primary-blue); }
+  .btn-success{ background:var(--success-green); color:#fff; }
+  .company-tabs{ background:#fff; border-radius:10px; padding:0 20px; margin-bottom:25px; box-shadow:0 2px 10px rgba(0,0,0,.1); }
+  .tabs{ display:flex; list-style:none; justify-content:center; }
+  .tab{ padding:20px 25px; cursor:pointer; border-bottom:3px solid transparent; font-weight:800; color:var(--text-light); }
+  .tab.active{ color:var(--primary-blue); border-bottom-color:var(--primary-blue); }
+  .tab-content{ display:none; }
+  .tab-content.active{ display:block; }
+  .products-grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:25px; }
+  .product-card{ background:#fff; border-radius:12px; overflow:hidden; box-shadow:0 4px 15px rgba(0,0,0,.1); transition: all .2s ease; cursor:pointer; }
+  .product-card:hover{ transform: translateY(-5px); box-shadow:0 8px 25px rgba(0,0,0,.15); }
+  .product-image{ width:100%; height:200px; background:var(--light-blue); display:flex; align-items:center; justify-content:center; font-size:50px; color:var(--primary-blue); }
+  .product-info{ padding:20px; }
+  .product-name{ font-size:18px; font-weight:800; margin-bottom:8px; color:#222; }
+  .product-price{ font-size:20px; font-weight:800; color:var(--primary-blue); margin-bottom:10px; }
+  .product-description{ color:var(--text-light); font-size:14px; margin-bottom:15px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient: vertical; overflow:hidden; }
+  .product-meta{ display:flex; justify-content:space-between; align-items:center; font-size:12px; color:var(--text-light); }
+  .rating{ color: var(--accent-yellow); }
+  .about-section, .map-section, .reviews-section { background:#fff; border-radius:12px; padding:30px; margin-bottom:25px; box-shadow:0 4px 15px rgba(0,0,0,.1); }
+  .section-title{ font-size:24px; color:var(--dark-blue); margin-bottom:20px; padding-bottom:10px; border-bottom:2px solid var(--light-blue); }
+  .about-content{ display:grid; grid-template-columns: 2fr 1fr; gap:30px; }
+  .about-text{ line-height:1.8; }
+  .contact-info{ background:var(--light-blue); padding:20px; border-radius:10px; }
+  .contact-item{ display:flex; align-items:center; gap:10px; margin-bottom:15px; }
+  .contact-item i{ color: var(--primary-blue); width: 18px; text-align:center; }
+  .chip i{ margin-right:6px; color: var(--dark-blue); }
+    .map-container{ height:420px; background:var(--light-blue); border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:18px; color:var(--text-light); border:2px dashed #ddd; width:100%; min-width:0; position:relative; }
+    .map-container:fullscreen, .map-container:-webkit-full-screen {
+      height: 100vh !important;
+      width: 100vw !important;
+      z-index: 9999;
+      background: #000;
+      border-radius: 0;
+      box-shadow: none;
+    }
+  /* route line styling for directions */
+  .maplibregl-canvas { border-radius:10px; }
+    .review-card{ background:var(--gray-bg); padding:20px; border-radius:10px; margin-bottom:20px; }
+    .review-header{ display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+    .reviewer-name{ font-weight:800; color:#222; }
+    .review-rating{ color: var(--accent-yellow); }
+    .review-date{ color: var(--text-light); font-size:12px; }
+    .basemap-tools{ margin-top:8px; display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:center; flex-direction:row; }
+    @media (max-width: 768px) {
+      .about-content{ grid-template-columns: 1fr; }
+      .products-grid{ grid-template-columns: repeat(auto-fill, minmax(250px,1fr)); }
+      .map-container{ height:300px; min-width:0; }
+      .input-group.mb-2 { max-width: 100% !important; width: 100%; }
+      .basemap-tools { flex-direction: column; gap: 6px; }
+      .btn-group[role="group"] { flex-direction: row; flex-wrap: wrap; gap: 6px; }
+      .btn { padding: 8px 12px; font-size: 14px; }
+      .form-control, .form-select { font-size: 14px; padding: 8px 10px; }
+      .section-title { font-size: 18px; }
+    }
+    @media (max-width: 480px) {
+      .company-page{ padding:6px; }
+      .tabs{ flex-direction:column; }
+      .tab{ text-align:center; border-bottom:1px solid #eee; font-size:15px; padding:12px 8px; }
+      .map-container{ height:220px; min-width:0; }
+      .input-group.mb-2 { max-width: 100% !important; width: 100%; }
+      .basemap-tools { flex-direction: column; gap: 4px; }
+      .btn-group[role="group"] { flex-direction: row; flex-wrap: wrap; gap: 4px; }
+      .btn { padding: 6px 8px; font-size: 13px; }
+      .form-control, .form-select { font-size: 13px; padding: 6px 8px; }
+      .section-title { font-size: 16px; }
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // tabs (robust to missing tabs like 'location')
+  const tabs = document.querySelectorAll('.tab');
+  const tabContents = document.querySelectorAll('.tab-content');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const tabId = tab.getAttribute('data-tab') + 'Tab';
+      tabs.forEach(t => t.classList.remove('active'));
+      tabContents.forEach(c => c.classList.remove('active'));
+      tab.classList.add('active');
+      const target = document.getElementById(tabId);
+      if (target) target.classList.add('active');
+      if (tabId === 'locationTab') {
+        // defer map init slightly to ensure tab is visible and container sized
+        setTimeout(initStoreMap, 100);
+      }
+    });
+  });
+
+  // MapLibre setup (no API key required)
+  function initStoreMap() {
+    if (window.__mapInited) return; // simple guard to prevent re-init
+    const mapDiv = document.getElementById('storeMap');
+    if (!mapDiv) return;
+    // Load MapLibre scripts if not present
+    const haveML = !!window.maplibregl;
+    const afterLoad = () => {
+      // Center: use seller lat/lng if available; else default to Ethiopia
+        let lat = {{ seller.latitude|default:'null' }};
+        let lng = {{ seller.longitude|default:'null' }};
+        let center = (lat !== null && lng !== null) ? [lng, lat] : [38.7578, 9.0108];
+        let zoom = (lat !== null && lng !== null) ? 15 : 6;
+        // Advanced: auto-detect visitor location if seller coords missing
+        function autoDetectLocation() {
+          if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition((pos) => {
+              lat = pos.coords.latitude;
+              lng = pos.coords.longitude;
+              center = [lng, lat];
+              zoom = 15;
+              map.setCenter(center);
+              map.setZoom(zoom);
+              // Add marker for visitor
+              if (!window.__visitorMarker) {
+                window.__visitorMarker = new maplibregl.Marker({ color: '#3b82f6' })
+                  .setLngLat(center)
+                  .setPopup(new maplibregl.Popup().setText('Your location'))
+                  .addTo(map);
+                window.__visitorMarker.togglePopup();
+              } else {
+                window.__visitorMarker.setLngLat(center);
+              }
+            }, () => {}, { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 });
+          }
+        }
+        if (lat === null || lng === null) {
+          setTimeout(autoDetectLocation, 600);
+        }
+      // Free basemaps: OSM raster (streets) and Esri World Imagery (satellite)
+      const osmRasterStyle = {
+        version: 8,
+        sources: {
+          osm: {
+            type: 'raster',
+            tiles: [
+              'https://a.tile.openstreetmap.org/{z}/{x}/{y}.png',
+              'https://b.tile.openstreetmap.org/{z}/{x}/{y}.png',
+              'https://c.tile.openstreetmap.org/{z}/{x}/{y}.png'
+            ],
+            tileSize: 256,
+            maxzoom: 19,
+            attribution: '© OpenStreetMap contributors'
+          }
+        },
+        layers: [
+          { id: 'osm-tiles', type: 'raster', source: 'osm', minzoom: 0, maxzoom: 19 }
+        ]
+      };
+      const esriSatelliteStyle = {
+        version: 8,
+        sources: {
+          esri: {
+            type: 'raster',
+            tiles: [
+              'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+            ],
+            tileSize: 256,
+            maxzoom: 19,
+            attribution: '© Esri, Maxar, Earthstar Geographics'
+          }
+        },
+        layers: [
+          { id: 'esri-tiles', type: 'raster', source: 'esri', minzoom: 0, maxzoom: 19 }
+        ]
+      };
+      const nasaBlueMarbleStyle = {
+        version: 8,
+        sources: {
+          nasa: {
+            type: 'raster',
+            tiles: [
+              'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/BlueMarble_ShadedRelief_Bathymetry/default//GoogleMapsCompatible_Level8/{z}/{y}/{x}.jpg'
+            ],
+            tileSize: 256,
+            maxzoom: 8,
+            attribution: 'Imagery: NASA GIBS BlueMarble'
+          }
+        },
+        layers: [
+          { id: 'nasa-tiles', type: 'raster', source: 'nasa', minzoom: 0, maxzoom: 8 }
+        ]
+      };
+  let style = osmRasterStyle;
+  {% if maptiler_key %}
+  style = `https://api.maptiler.com/maps/streets-v2/style.json?key={{ maptiler_key }}`;
+  {% endif %}
+
+      const map = new maplibregl.Map({
+        container: 'storeMap',
+        style: style,
+        center: center,
+        zoom: zoom,
+        maxZoom: 19,
+        attributionControl: true
+      });
+        // Clamp zoom for satellite/hybrid and show hint
+        let zoomWarning = null;
+        function showZoomWarning() {
+          if (!zoomWarning) {
+            zoomWarning = document.createElement('div');
+            zoomWarning.className = 'alert alert-warning position-absolute w-100 text-center';
+            zoomWarning.style.top = '10px';
+            zoomWarning.style.left = '0';
+            zoomWarning.style.zIndex = '10';
+            zoomWarning.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i> Satellite/labels are only available up to zoom 19.';
+            mapDiv.appendChild(zoomWarning);
+            setTimeout(() => { if (zoomWarning) zoomWarning.remove(); zoomWarning = null; }, 3500);
+          }
+        }
+        map.on('zoom', () => {
+          if (window.__isSatellite && map.getZoom() > 19) {
+            map.zoomTo(19, { duration: 0 });
+            showZoomWarning();
+          }
+        });
+  map.addControl(new maplibregl.NavigationControl(), 'top-right');
+  map.addControl(new maplibregl.GeolocateControl({ positionOptions: { enableHighAccuracy: true }, trackUserLocation: false }), 'top-right');
+  map.addControl(new maplibregl.ScaleControl({ maxWidth: 120, unit: 'metric' }));
+  // Add fullscreen control
+  map.addControl(new maplibregl.FullscreenControl({ container: document.querySelector('.map-container') }), 'top-right');
+      // Add marker and popup if we have a precise location
+      if (lat !== null && lng !== null) {
+        const popupHtml = `<strong>{{ seller.company_name|escapejs }}</strong><br/>{{ seller.address|default:'No address provided'|escapejs }}`;
+        const marker = new maplibregl.Marker({ color: '#d62828' })
+          .setLngLat([lng, lat])
+          .setPopup(new maplibregl.Popup().setHTML(popupHtml))
+          .addTo(map);
+        // Open popup by default for clarity
+        marker.togglePopup();
+      }
+
+      // Fallback: if no precise coordinates but we have an address, try geocoding to approximate location
+      {% if not seller.latitude and not seller.longitude and seller.address %}
+      (async () => {
+        try {
+          const q = encodeURIComponent(`{{ seller.address|escapejs }}`);
+          const url = `https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=1`;
+          const res = await fetch(url, { headers: { 'Accept-Language': 'en' } });
+          const data = await res.json();
+          if (Array.isArray(data) && data.length) {
+            const latN = parseFloat(data[0].lat);
+            const lonN = parseFloat(data[0].lon);
+            map.setCenter([lonN, latN]);
+            map.setZoom(15);
+            const popupHtml = `<strong>{{ seller.company_name|escapejs }}</strong><br/>Approximate location from address`;
+            new maplibregl.Marker({ color: '#1e90ff' })
+              .setLngLat([lonN, latN])
+              .setPopup(new maplibregl.Popup().setHTML(popupHtml))
+              .addTo(map)
+              .togglePopup();
+          }
+        } catch (e) {
+          console.warn('Geocoding failed', e);
+        }
+      })();
+      {% endif %}
+
+      // Simple directions with OSRM (public demo endpoint), triggered by button if coords exist
+      const btn = document.getElementById('getDirectionsBtn');
+      if (btn && lat !== null && lng !== null) {
+        btn.addEventListener('click', () => {
+          if (!navigator.geolocation) {
+            alert('Geolocation is not supported on this device.');
+            return;
+          }
+          navigator.geolocation.getCurrentPosition(async (pos) => {
+            const from = [pos.coords.longitude, pos.coords.latitude];
+            const to = [lng, lat];
+            const profileSel = document.getElementById('routeProfile');
+            const mode = profileSel ? profileSel.value : 'driving';
+            try {
+              // Start marker for buyer location
+              if (!window.__fromMarker) {
+                window.__fromMarker = new maplibregl.Marker({ color: '#3b82f6' }).setLngLat(from).addTo(map);
+              } else {
+                window.__fromMarker.setLngLat(from);
+              }
+              // Query OSRM demo server for selected profile
+              const url = `https://router.project-osrm.org/route/v1/${mode}/${from[0]},${from[1]};${to[0]},${to[1]}?overview=full&geometries=geojson&steps=true`;
+              const res = await fetch(url);
+              const data = await res.json();
+              if (!data.routes || !data.routes.length) throw new Error('No route found');
+              const route = data.routes[0];
+              const line = route.geometry;
+              // store globally to re-add after style switches
+              window.__routeGeo = line;
+
+              // Add/update route source/layer
+              const srcId = 'route-source';
+              const layerId = 'route-layer';
+              if (map.getSource(srcId)) {
+                map.getSource(srcId).setData({ type: 'Feature', geometry: line, properties: {} });
+              } else {
+                map.addSource(srcId, { type: 'geojson', data: { type: 'Feature', geometry: line, properties: {} } });
+                map.addLayer({
+                  id: layerId,
+                  type: 'line',
+                  source: srcId,
+                  paint: { 'line-color': '#1e90ff', 'line-width': 5, 'line-opacity': 0.85 }
+                });
+              }
+              // Fit to route bounds
+              const coords = line.coordinates;
+              const bounds = new maplibregl.LngLatBounds(coords[0], coords[0]);
+              for (const c of coords) bounds.extend(c);
+              map.fitBounds(bounds, { padding: 40 });
+
+              // Show summary (distance in km, duration in minutes)
+              const km = (route.distance / 1000).toFixed(1);
+              const mins = Math.round(route.duration / 60);
+              const sumEl = document.getElementById('routeSummary');
+              if (sumEl) sumEl.textContent = `~${km} km, ~${mins} min drive`;
+
+              // Render step-by-step instructions
+              const stepsWrap = document.getElementById('routeStepsWrap');
+              const ol = document.getElementById('routeSteps');
+              if (stepsWrap && ol) {
+                ol.innerHTML = '';
+                const legs = route.legs || [];
+                const makeText = (step) => {
+                  const t = step.maneuver?.type || 'continue';
+                  const m = step.maneuver?.modifier || '';
+                  const road = step.name ? ` onto ${step.name}` : '';
+                  const turn = m ? m.replace('-', ' ') : '';
+                  switch (t) {
+                    case 'depart': return `Start${road}`;
+                    case 'turn': return `Turn ${turn}${road}`.trim();
+                    case 'continue': return `Continue${road}`;
+                    case 'roundabout': return `Take the roundabout${road}`;
+                    case 'arrive': return 'Arrive at destination';
+                    case 'merge': return `Merge${road}`;
+                    case 'on ramp': return `Take ramp${road}`;
+                    case 'off ramp': return `Exit ramp${road}`;
+                    default: return `${t}${road}`;
+                  }
+                };
+                for (const leg of legs) {
+                  for (const step of leg.steps || []) {
+                    const li = document.createElement('li');
+                    const dist = (step.distance/1000).toFixed(2);
+                    li.textContent = `${makeText(step)} (${dist} km)`;
+                    ol.appendChild(li);
+                  }
+                }
+                stepsWrap.style.display = 'block';
+              }
+            } catch (e) {
+              console.error(e);
+              alert('Could not fetch directions at the moment.');
+            }
+          }, (err) => {
+            alert('Could not get your current location. Please enable location services.');
+          }, { enableHighAccuracy: true, timeout: 8000 });
+        });
+      }
+
+      // Place search removed on seller profile for a cleaner UI
+
+      // Links: open in Google Maps & copy coordinates
+      const gmaps = document.getElementById('openGmaps');
+      if (gmaps && lat !== null && lng !== null) {
+        gmaps.href = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+      }
+      const copyBtn = document.getElementById('copyCoords');
+      if (copyBtn && lat !== null && lng !== null) {
+        copyBtn.addEventListener('click', async () => {
+          try {
+            await navigator.clipboard.writeText(`${lat}, ${lng}`);
+            copyBtn.textContent = 'Copied!';
+            setTimeout(() => copyBtn.textContent = 'Copy Coords', 1200);
+          } catch {}
+        });
+      }
+
+  window.__mapInited = true;
+      // Basemap toggle (Streets/Satellite)
+  const bmStreets = document.getElementById('bmStreets');
+  const bmSatellite = document.getElementById('bmSatellite');
+  const bmHybrid = document.getElementById('bmHybrid');
+  const bmGlobal = document.getElementById('bmGlobal');
+      window.__isSatellite = false;
+      const reAddRouteIfAny = () => {
+        if (!window.__routeGeo) return;
+        const line = window.__routeGeo;
+        const srcId = 'route-source';
+        const layerId = 'route-layer';
+        if (map.getSource(srcId)) return; // already there
+        map.addSource(srcId, { type: 'geojson', data: { type: 'Feature', geometry: line, properties: {} } });
+        map.addLayer({ id: layerId, type: 'line', source: srcId, paint: { 'line-color': '#1e90ff', 'line-width': 5, 'line-opacity': 0.85 } });
+      };
+      if (bmStreets) bmStreets.addEventListener('click', () => {
+        window.__isSatellite = false;
+        {% if maptiler_key %}
+        map.setStyle(`https://api.maptiler.com/maps/streets-v2/style.json?key={{ maptiler_key }}`);
+        {% else %}
+        map.setStyle(osmRasterStyle);
+        {% endif %}
+        map.once('style.load', () => { map.jumpTo({ center, zoom }); map.setMaxZoom(19); reAddRouteIfAny(); });
+      });
+      if (bmSatellite) bmSatellite.addEventListener('click', () => {
+        window.__isSatellite = true;
+        // Free ESRI imagery by default
+        map.setStyle(esriSatelliteStyle);
+        map.once('style.load', () => {
+          // Transparent overlays for labels and roads to enhance detail
+          map.addSource('esri-ref-places', {
+            type: 'raster',
+            tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}'],
+            tileSize: 256,
+            maxzoom: 19
+          });
+          map.addLayer({ id: 'esri-ref-places-layer', type: 'raster', source: 'esri-ref-places', paint: { 'raster-opacity': 1.0 } });
+
+          map.addSource('esri-ref-transport', {
+            type: 'raster',
+            tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}'],
+            tileSize: 256,
+            maxzoom: 19
+          });
+          map.addLayer({ id: 'esri-ref-transport-layer', type: 'raster', source: 'esri-ref-transport', paint: { 'raster-opacity': 0.9 } });
+
+          {% if maptiler_key %}
+          // Optional labels overlay when key exists (hybrid look)
+          map.addSource('labels', { type: 'vector', url: `https://api.maptiler.com/tiles/v3/tiles.json?key={{ maptiler_key }}` });
+          map.addLayer({ id: 'place-labels', type: 'symbol', source: 'labels', 'source-layer': 'place', layout: { 'text-field': ['get', 'name'], 'text-size': 12 }, paint: { 'text-color': '#ffffff', 'text-halo-color': '#000000', 'text-halo-width': 1.2 } });
+          {% endif %}
+          map.jumpTo({ center, zoom });
+          map.setMaxZoom(19);
+          reAddRouteIfAny();
+        });
+      });
+
+      // Satellite + Labels (MapTiler hybrid if key is present; else Esri + overlays)
+      if (bmHybrid) bmHybrid.addEventListener('click', () => {
+        window.__isSatellite = true;
+        {% if maptiler_key %}
+        map.setStyle(`https://api.maptiler.com/maps/hybrid/style.json?key={{ maptiler_key }}`);
+        map.once('style.load', () => { map.jumpTo({ center, zoom }); map.setMaxZoom(19); reAddRouteIfAny(); });
+        {% else %}
+        map.setStyle(esriSatelliteStyle);
+        map.once('style.load', () => {
+          map.addSource('esri-ref-places', { type: 'raster', tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}'], tileSize: 256, maxzoom: 19 });
+          map.addLayer({ id: 'esri-ref-places-layer', type: 'raster', source: 'esri-ref-places', paint: { 'raster-opacity': 1.0 } });
+          map.addSource('esri-ref-transport', { type: 'raster', tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}'], tileSize: 256, maxzoom: 19 });
+          map.addLayer({ id: 'esri-ref-transport-layer', type: 'raster', source: 'esri-ref-transport', paint: { 'raster-opacity': 0.9 } });
+          map.jumpTo({ center, zoom }); map.setMaxZoom(19); reAddRouteIfAny();
+        });
+        {% endif %}
+      });
+
+      // NASA Global (low zoom overview)
+      if (bmGlobal) bmGlobal.addEventListener('click', () => {
+        window.__isSatellite = true;
+        map.setStyle(nasaBlueMarbleStyle);
+        map.once('style.load', () => {
+          // If too zoomed in, pull back to level 4-6 overview
+          const z = Math.min(map.getZoom(), 6);
+          map.jumpTo({ center, zoom: z });
+          map.setMaxZoom(8);
+          reAddRouteIfAny();
+        });
+      });
+
+      // Show a hint if zoom exceeds imagery availability in satellite mode
+      let hintShown = false;
+      map.on('zoomend', () => {
+        const h = document.getElementById('mapHint');
+        if (window.__isSatellite && map.getZoom() > 19) {
+          map.setZoom(19);
+          if (!hintShown && h) { h.style.display = 'block'; setTimeout(() => h.style.display = 'none', 4000); hintShown = true; }
+        }
+      });
+
+      // Tilt controls (2D/3D)
+      const tilt2d = document.getElementById('tilt2d');
+      const tilt3d = document.getElementById('tilt3d');
+      if (tilt2d) tilt2d.addEventListener('click', () => {
+        map.easeTo({ pitch: 0, bearing: 0, duration: 600 });
+      });
+      if (tilt3d) tilt3d.addEventListener('click', () => {
+        map.easeTo({ pitch: 60, bearing: 20, duration: 800 });
+      });
+    };
+    if (!haveML) {
+      const css = document.createElement('link');
+      css.rel = 'stylesheet';
+      css.href = 'https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css';
+      document.head.appendChild(css);
+      const js = document.createElement('script');
+      js.src = 'https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js';
+      js.onload = afterLoad;
+      document.body.appendChild(js);
+    } else {
+      afterLoad();
+    }
+  }
+
+  // If Location tab is default open via server logic, init map on load
+  if (document.getElementById('locationTab')?.classList.contains('active')) {
+    initStoreMap();
+  }
+</script>
+<script>
+  (function(){
+    const btn = document.getElementById('follow-btn');
+    if (!btn) return;
+    const sellerId = {{ seller.id }};
+    const countEl = document.getElementById('followers-count');
+    const textEl = document.getElementById('follow-text');
+
+    function getCookie(name) {
+      const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+      if (match) return decodeURIComponent(match[2]);
+    }
+
+    btn.addEventListener('click', async function(e){
+      e.preventDefault();
+      btn.disabled = true;
+      try {
+        const res = await fetch(`/warehouse/api/seller/${sellerId}/toggle-follow/`, {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': getCookie('csrftoken') || '{{ csrf_token }}',
+            'Accept': 'application/json'
+          }
+        });
+        const data = await res.json();
+        if (!res.ok) { throw new Error(data.error || 'Failed'); }
+        if (data.followed) {
+          btn.classList.remove('btn-outline');
+          btn.classList.add('btn-success');
+          btn.querySelector('i').classList.remove('fa-user-plus');
+          btn.querySelector('i').classList.add('fa-check');
+          if (textEl) textEl.textContent = 'Following';
+        } else {
+          btn.classList.remove('btn-success');
+          btn.classList.add('btn-outline');
+          btn.querySelector('i').classList.remove('fa-check');
+          btn.querySelector('i').classList.add('fa-user-plus');
+          if (textEl) textEl.textContent = 'Follow';
+        }
+        if (countEl && typeof data.followers === 'number') {
+          countEl.textContent = data.followers;
+        }
+      } catch (err) {
+        console.error(err);
+        alert(err.message || 'Something went wrong');
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  })();
+</script>
+{% endblock %}

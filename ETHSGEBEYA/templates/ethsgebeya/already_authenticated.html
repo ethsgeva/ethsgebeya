@@ -1,0 +1,16 @@
+{% extends 'ethsgebeya/public_base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container d-flex align-items-center justify-content-center min-vh-100">
+    <div class="alert alert-success d-flex align-items-center shadow-lg p-4" style="max-width: 500px; width: 100%; border-radius: 12px; font-size: 1.1rem;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="#28a745" class="bi bi-check-circle me-3" viewBox="0 0 16 16">
+            <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM6.97 11.03a.75.75 0 0 0 1.07 0l3.992-3.992a.75.75 0 1 0-1.06-1.06L7.5 9.439 6.03 7.97a.75.75 0 1 0-1.06 1.06l1.999 2z"/>
+        </svg>
+        <div>
+            <strong>SUCCESS!</strong> You are already signed in and have an account.<br>
+            <span class="text-muted">You can continue using the site.</span>
+        </div>
+    </div>
+</div>
+{% endblock %}

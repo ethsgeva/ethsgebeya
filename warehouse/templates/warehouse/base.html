@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ETHSGEBEYA Dashboard{% endblock %}</title>
+    
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    {% load static %}
+    
+    <!-- Favicons and Manifest for all platforms -->
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'img/apple-touch-icon.png' %}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'img/favicon-32x32.png' %}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'img/favicon-16x16.png' %}">
+    <link rel="manifest" href="{% static 'img/site.webmanifest' %}">
+    <link rel="icon" type="image/x-icon" href="{% static 'img/favicon.ico' %}">
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="ETHSGEBEYA - The best place to buy and sell products in Ethiopia. Secure, fast, and easy e-commerce for everyone.">
+    <meta name="keywords" content="Ethiopia, e-commerce, online shop, buy, sell, marketplace, ETHSGEBEYA">
+    <meta name="author" content="ETHSGEBEYA Team">
+    <meta property="og:title" content="ETHSGEBEYA - Ethiopia's Marketplace">
+    <meta property="og:description" content="Buy and sell products easily on ETHSGEBEYA. Secure, fast, and user-friendly.">
+    <meta property="og:image" content="{% static 'img/logo.jpg' %}">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="ETHSGEBEYA - Ethiopia's Marketplace">
+    <meta name="twitter:description" content="Buy and sell products easily on ETHSGEBEYA.">
+    <meta name="twitter:image" content="{% static 'img/logo.jpg' %}">
+    <!-- Accessibility: Skip to content -->
+    <a href="#main-content" class="visually-hidden-focusable skip-link">Skip to main content</a>
+    <style>
+        :root {
+            --sidebar-width: 260px;
+            --navbar-height: 70px;
+            --primary-color: #212529;
+            --primary-dark: #1a1d20;
+            --secondary-color:rgb(235, 40, 33);
+            --accent-color: #36b9cc;
+            --light-bg: #f8f9fc;
+            --dark-bg: #2c3e50;
+            --success: #1cc88a;
+            --warning: #f6c23e;
+            --danger: #e74a3b;
+            --sidebar-bg: #ffffff;
+            --card-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.05);
+            --transition: all 0.3s ease;
+        }
+        .skip-link {
+            position: absolute;
+            left: -999px;
+            top: auto;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+            z-index: 10000;
+        }
+        .skip-link:focus {
+            left: 10px;
+            top: 10px;
+            width: auto;
+            height: auto;
+            background: #212529;
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 4px;
+            outline: 2px solid #36b9cc;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--light-bg);
+            min-height: 100vh;
+            padding-top: var(--navbar-height);
+            color:#5966b9;
+            overflow-x: hidden;
+        }
+
+        /* Navbar Styling */
+        .navbar {
+            height: var(--navbar-height);
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            padding: 0 1.5rem;
+        }
+
+        .logo {
+            font-weight: 700;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: white;
+            text-decoration: none;
+        }
+
+        .logo img {
+            height: 50px;
+            width: auto;
+            border-radius: 8px;
+        }
+
+        .logo:hover {
+            color: rgba(255, 255, 255, 0.85);
+        }
+
+        .mobile-menu-toggle {
+            color: white;
+            font-size: 1.5rem;
+            background: transparent;
+            border: none;
+            outline: none;
+        }
+
+        /* Profile Section */
+        .profile-dropdown {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+
+        .profile-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        .profile-name {
+            font-weight: 600;
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        .profile-role {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.8rem;
+        }
+
+        .profile-img {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            object-fit: cover;
+            transition: var(--transition);
+        }
+
+        .profile-dropdown:hover .profile-img {
+            transform: scale(1.05);
+            border-color: white;
+        }
+
+        .dropdown-card {
+            display: none;
+            position: absolute;
+            top: 60px;
+            right: 0;
+            min-width: 250px;
+            background: white;
+            box-shadow: var(--card-shadow);
+            border-radius: 10px;
+            padding: 20px;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .dropdown-card.show {
+            display: block;
+        }
+
+        .dropdown-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e3e6f0;
+        }
+
+        .dropdown-header img {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .dropdown-header-info h6 {
+            font-weight: 600;
+            margin-bottom: 3px;
+        }
+
+        .dropdown-header-info p {
+            color: var(--secondary-color);
+            font-size: 0.85rem;
+            margin-bottom: 0;
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 0;
+            text-decoration: none;
+            color: #5a5c69;
+            transition: var(--transition);
+            font-weight: 500;
+            border-radius: 6px;
+            padding: 8px 12px;
+        }
+
+        .dropdown-item i {
+            width: 24px;
+            color: var(--primary-color);
+            margin-right: 10px;
+            font-size: 1.1rem;
+        }
+
+        .dropdown-item:hover {
+            background-color: #f8f9fc;
+            color: var(--primary-dark);
+            padding-left: 15px;
+        }
+
+        /* Sidebar Styling */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: var(--navbar-height);
+            height: calc(100vh - var(--navbar-height));
+            width: var(--sidebar-width);
+            background-color: var(--sidebar-bg);
+            box-shadow: 2px 0 15px rgba(0,0,0,0.05);
+            transition: var(--transition);
+            overflow-y: auto;
+            z-index: 999;
+            padding: 20px 0;
+        }
+
+        .sidebar-sticky {
+            position: relative;
+            height: 100%;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 0;
+        }
+
+        .sidebar-menu li {
+            margin-bottom: 5px;
+        }
+
+        .sidebar-menu li a {
+            padding: 12px 25px;
+            display: flex;
+            align-items: center;
+            color: #5a5c69;
+            text-decoration: none;
+            transition: var(--transition);
+            border-radius: 0 30px 30px 0;
+            margin: 0 10px;
+            font-weight: 500;
+        }
+
+        .sidebar-menu li a i {
+            width: 24px;
+            margin-right: 12px;
+            font-size: 1.1rem;
+            transition: var(--transition);
+        }
+
+        .sidebar-menu li a:hover {
+            background-color: #f0f3ff;
+            color: var(--primary-color);
+            padding-left: 30px;
+        }
+
+        .sidebar-menu li a:hover i {
+            color: var(--primary-color);
+        }
+
+        .sidebar-menu li.active a {
+            background: linear-gradient(90deg, rgba(78, 115, 223, 0.1) 0%, rgba(78, 115, 223, 0.05) 100%);
+            color: var(--primary-color);
+            font-weight: 600;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .sidebar-menu li.active a i {
+            color: var(--primary-color);
+        }
+
+        .sidebar-divider {
+            border-top: 1px solid #eaecf4;
+            margin: 20px 25px;
+        }
+
+        .sidebar-footer {
+            padding: 0 25px;
+            margin-top: 20px;
+            font-size: 0.85rem;
+            color: var(--secondary-color);
+            text-align: center;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 0 !important;
+            transition: var(--transition);
+            min-height: calc(100vh - var(--navbar-height));
+        }
+
+        .container-fluid {
+            padding: 0 !important;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eaecf4;
+        }
+
+        .page-header h1 {
+            font-weight: 700;
+            font-size: 1.8rem;
+            color: var(--dark-bg);
+            margin: 0;
+        }
+
+        /* Footer */
+        .footer {
+            background-color: white;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+            margin-left: var(--sidebar-width);
+            transition: var(--transition);
+            color: var(--secondary-color);
+            font-size: 0.9rem;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 992px) {
+            .sidebar {
+                left: calc(-1 * var(--sidebar-width));
+            }
+
+            .sidebar.active {
+                left: 0;
+            }
+
+            .main-content, .footer {
+                margin-left: 0;
+            }
+
+            .mobile-menu-toggle {
+                display: block !important;
+            }
+            
+            .profile-info {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            #main-content {
+                padding: 0rem !important;
+                flex-direction: column;
+            }
+
+            .main-content {
+                padding: 0rem !important;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .navbar {
+                padding: 0 15px;
+            }
+            
+            .logo span {
+                display: none;
+            }
+            
+            .logo img {
+                height: 40px;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Scrollbar styling */
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 10px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+
+        
+    </style>
+    {% block styles %}
+    {% endblock %}
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg" aria-label="Main navigation">
+        <div class="container-fluid">
+            <div class="d-flex align-items-center">
+                <button class="btn mobile-menu-toggle d-lg-none me-3" type="button">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <a class="navbar-brand logo" href="#">
+                    <img src="{% static 'img/logo.png' %}" alt="ETHSGEBEYA Logo">
+                    <span>ETHSGEBEYA</span>
+                </a>
+            </div>
+
+            <!-- Profile Section -->
+            <div class="profile-dropdown ml-auto">
+                <div class="profile-info">
+                    <div class="profile-name">{{ request.user.get_full_name|title|truncatechars:15 }}</div>
+                    <div class="profile-role">{{ request.user.profile.role|capfirst }}</div>
+                </div>
+                <img src="{% if request.user.sellerprofile.create_logo %}{{ request.user.sellerprofile.create_logo.url }}{% else %}{% static 'img/profile_img.jpg' %}{% endif %}" class="profile-img" alt="Profile" id="profileDropdown">
+                <div class="dropdown-card" id="dropdownCard">
+                    <div class="dropdown-header">
+                        <img src="{% if request.user.sellerprofile.create_logo %}{{ request.user.sellerprofile.create_logo.url }}{% else %}{% static 'img/profile_img.jpg' %}{% endif %}" alt="Profile">
+                        <div class="dropdown-header-info">
+                            <h6>{{ request.user.get_full_name|title }}</h6>
+                            <p>{{ request.user.profile.role|capfirst }} Account</p>
+                        </div>
+                    </div>
+                    <a href="{% url 'setting' %}" class="dropdown-item">
+                        <i class="fas fa-cog"></i>Settings
+                    </a>
+                    <a href="{% url 'setting' %}" class="dropdown-item">
+                        <i class="fas fa-user-cog"></i>Edit Profile
+                    </a>
+                    <a href="#" class="dropdown-item" onclick="event.preventDefault(); showHelpSupport();">
+                        <i class="fas fa-question-circle"></i>Help Center
+                    </a>
+                    {% if request.user.profile.role == 'seller' %}
+                    <a href="{% url 'settings_orders_page' %}" class="dropdown-item position-relative">
+                        <i class="fas fa-list"></i>Orders
+                        {% if seller_pending_orders_count > 0 %}
+                        <span class="position-absolute top-0 end-0 translate-middle badge rounded-pill bg-danger" style="font-size:0.8rem; right: -18px; top: 8px;">
+                            {{ seller_pending_orders_count }}
+                        </span>
+                        {% endif %}
+                    </a>
+                    {% else %}
+                    <a href="{% url 'settings_orders_page' %}" class="dropdown-item position-relative">
+                        <i class="fas fa-list"></i>Orders &amp; Wishlist
+                        {% if cart_count > 0 %}
+                        <span class="position-absolute top-0 end-0 translate-middle badge rounded-pill bg-danger" style="font-size:0.8rem; right: -18px; top: 8px;">
+                            {{ cart_count }}
+                        </span>
+                        {% endif %}
+                    </a>
+                    {% endif %}
+                    <div class="sidebar-divider"></div>
+                    <form method="post" action="{% url 'sign-out' %}" style="margin:0;">
+                      {% csrf_token %}
+                      <button type="submit" class="dropdown-item text-danger" style="background:none; border:none; width:100%; text-align:left; padding:10px 0;">
+                        <i class="fas fa-sign-out-alt"></i>Logout
+                      </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-sticky">
+            <ul class="sidebar-menu">
+                <li>
+                    <a href="/">
+                        <i class="fas fa-globe"></i>
+                        Home Page
+                    </a>
+                </li>
+                <li class="{% if request.path == '/warehouse/dashboard/' %}active{% endif %}">
+                    <a href="{% url 'dashboard' %}">
+                        <i class="fas fa-home"></i>
+                        Dashboard
+                    </a>
+                </li>
+                <li class="{% if request.path == '/add/' %}active{% endif %}">
+                    <a href="{% url 'add_product' %}">
+                        <i class="fas fa-plus-circle"></i>
+                        Add Product
+                    </a>
+                </li>
+                <li class="{% if request.path == '/seller-products/' %}active{% endif %}">
+                    <a href="{% url 'seller_products' %}">
+                        <i class="fas fa-box-open"></i>
+                        My Products
+                    </a>
+                </li>
+                <li class="{% if request.path == '/warehouse/customer/' %}active{% endif %}">
+                    <a href="{% url 'customer_page' %}">
+                        <i class="fas fa-users"></i>
+                        Customers
+                    </a>
+                </li>
+                
+                <li class="position-relative">
+                    <a href="#" onclick="event.preventDefault(); showComingSoon();" class="d-flex align-items-center">
+                        <i class="fas fa-chart-line"></i>
+                        <span class="ms-2">Analytics</span>
+                        <span class="badge bg-warning position-absolute" style="top: 0; right: 0;">Coming Soon</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'settings_orders_page' %}" class="position-relative">
+                        <i class="fas fa-list"></i>
+                        {% if request.user.profile.role == 'seller' %}
+                            Orders
+                            <span id="sidebar-seller-orders-badge" class="position-absolute top-0 end-0 translate-middle badge rounded-pill bg-danger" style="font-size:0.8rem; right: -18px; top: 8px;{% if not seller_pending_orders_count or seller_pending_orders_count == 0 %} display:none;{% endif %}">
+                                {{ seller_pending_orders_count }}
+                            </span>
+                        {% else %}
+                            Orders & Wishlist
+                            <span id="sidebar-buyer-cart-badge" class="position-absolute top-0 end-0 translate-middle badge rounded-pill bg-danger" style="font-size:0.8rem; right: -18px; top: 8px;{% if not cart_count or cart_count == 0 %} display:none;{% endif %}">
+                                {{ cart_count }}
+                            </span>
+                        {% endif %}
+                    </a>
+                </li>
+                <li class="position-relative">
+                    <a href="#" onclick="event.preventDefault(); showComingSoon();" class="d-flex align-items-center">
+                        <i class="fas fa-comments"></i>
+                        <span class="ms-2">Messages</span>
+                        <span class="badge bg-warning position-absolute" style="top: 0; right: 0;">Coming Soon</span>
+                    </a>
+                </li>
+            </ul>
+            
+            <div class="sidebar-divider"></div>
+            
+            <ul class="sidebar-menu">
+                <li>
+                    <a href="{% url 'setting' %}">
+                        <i class="fas fa-cog"></i>
+                        Settings
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="event.preventDefault(); showHelpSupport();">
+                        <i class="fas fa-question-circle"></i>
+                        Help & Support
+                    </a>
+                </li>
+            </ul>
+            
+            <div class="sidebar-footer">
+                <p>© 2025 ETHSGEBEYA<br>All rights reserved</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="main-content" id="main-content p-0 p-md-3" tabindex="-1">
+        <div class="container-fluid">
+            <div class="page-header">
+                {% block page_title %}<h1>Dashboard</h1>{% endblock %}
+            </div>
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <span>© 2025 ETHSGEBEYA. All rights reserved</span>
+    </footer>
+
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Toggle Sidebar on Mobile
+        document.querySelector('.mobile-menu-toggle').addEventListener('click', function() {
+            document.querySelector('.sidebar').classList.toggle('active');
+        });
+
+        // Toggle Profile Dropdown
+        document.getElementById('profileDropdown').addEventListener('click', function(e) {
+            e.stopPropagation();
+            document.getElementById('dropdownCard').classList.toggle('show');
+        });
+
+        // Close dropdown when clicking outside
+        window.addEventListener('click', function(e) {
+            if (!e.target.closest('.profile-dropdown')) {
+                document.getElementById('dropdownCard').classList.remove('show');
+            }
+        });
+
+        // Adjust content on resize
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 992) {
+                document.querySelector('.sidebar').classList.remove('active');
+            }
+        });
+
+        // Add active class to current page in sidebar
+        document.querySelectorAll('.sidebar-menu li a').forEach(link => {
+            if (link.href === window.location.href) {
+                link.parentElement.classList.add('active');
+            }
+        });
+
+        // Function to show toast messages
+        function toast(message, type) {
+            // Implementation for toast notifications
+            console.log(`Toast: ${message} (${type})`);
+        }
+
+        {% if messages %}
+          <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 2000;">
+            {% for message in messages %}
+              <div class="toast align-items-center text-bg-{{ message.tags }} border-0 mb-2 show" role="alert" aria-live="assertive" aria-atomic="true" style="min-width:320px;">
+                <div class="d-flex">
+                  <div class="toast-body">{{ message }}</div>
+                  <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+
+        {% block scripts %}
+        {% endblock %}
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+          // Tab switching functionality
+          const tabLinks = document.querySelectorAll('.settings-nav .nav-link[data-tab]');
+          
+          tabLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+              e.preventDefault();
+              
+              // Get target tab ID
+              const targetTabId = this.getAttribute('data-tab');
+              
+              // Remove active class from all links
+              tabLinks.forEach(item => {
+                item.classList.remove('active');
+              });
+              
+              // Add active class to clicked link
+              this.classList.add('active');
+              
+              // Hide all tab panes
+              document.querySelectorAll('.tab-pane').forEach(pane => {
+                pane.classList.remove('active');
+              });
+              
+              // Show target tab pane
+              document.getElementById(targetTabId).classList.add('active');
+            });
+          });
+          
+          // Initialize compass
+          const compassArrow = document.querySelector('.compass .arrow');
+          let currentHeading = 0;
+          function updateCompass() {
+            if (!compassArrow) return;
+            // Simulate compass movement (in a real app, use device orientation API)
+            currentHeading = (currentHeading + 15) % 360;
+            compassArrow.style.transform = `rotate(${currentHeading}deg)`;
+            const headingDisplay = document.getElementById('heading-display');
+            if (headingDisplay) headingDisplay.textContent = `Heading: ${currentHeading}°`;
+          }
+          // Update compass every 2 seconds
+          setInterval(updateCompass, 2000);
+          // Initialize first compass update
+          updateCompass();
+          
+          // Profile image preview
+          const logoInput = document.getElementById('id_create_logo');
+          if (logoInput) {
+            logoInput.addEventListener('change', function(e) {
+              if (this.files && this.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                  document.getElementById('logo-preview').src = e.target.result;
+                }
+                reader.readAsDataURL(this.files[0]);
+              }
+            });
+          }
+        });
+      </script>
+      <script>
+        document.addEventListener('DOMContentLoaded', function() {
+          // Logo preview functionality
+          const logoInput = document.getElementById('id_create_logo');
+          const logoPreview = document.querySelector('.logo-preview');
+          
+          if (logoInput) {
+            logoInput.addEventListener('change', function(e) {
+              if (this.files && this.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                  // Remove existing content
+                  while (logoPreview.firstChild) {
+                    logoPreview.removeChild(logoPreview.firstChild);
+                  }
+                  
+                  // Create new image
+                  const img = document.createElement('img');
+                  img.src = e.target.result;
+                  img.classList.add('rounded-circle');
+                  img.style.objectFit = 'cover';
+                  img.style.width = '100%';
+                  img.style.height = '100%';
+                  
+                  logoPreview.appendChild(img);
+                }
+                reader.readAsDataURL(this.files[0]);
+              }
+            });
+          }
+          
+          // Add time picker enhancements
+          const timeInputs = document.querySelectorAll('input[type="time"]');
+          timeInputs.forEach(input => {
+            input.addEventListener('focus', function() {
+              this.parentElement.style.borderColor = '#4e73df';
+              this.parentElement.style.boxShadow = '0 0 0 3px rgba(78, 115, 223, 0.15)';
+            });
+            
+            input.addEventListener('blur', function() {
+              this.parentElement.style.borderColor = '#e2e8f0';
+              this.parentElement.style.boxShadow = 'none';
+            });
+          });
+          
+          // Form validation feedback
+          const form = document.querySelector('.store-settings-form');
+          if (form) {
+            form.addEventListener('submit', function(e) {
+              const requiredFields = form.querySelectorAll('[required]');
+              let isValid = true;
+              
+              requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                  isValid = false;
+                  field.classList.add('is-invalid');
+                } else {
+                  field.classList.remove('is-invalid');
+                }
+              });
+              
+              if (!isValid) {
+                e.preventDefault();
+                // Add error message
+                const errorAlert = document.createElement('div');
+                errorAlert.className = 'alert alert-danger mt-3';
+                errorAlert.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i> Please fill in all required fields';
+                form.querySelector('.d-flex.justify-content-end').before(errorAlert);
+                
+                // Scroll to first error
+                const firstError = form.querySelector('.is-invalid');
+                if (firstError) {
+                  firstError.scrollIntoView({behavior: 'smooth', block: 'center'});
+                }
+              }
+            });
+          }
+        });
+      </script>      
+      <script>
+function showComingSoon() {
+    // Use Django messages instead of alert/toast
+    toast('This feature is coming soon!', 'info');
+}
+</script>
+
+<!-- Help & Support Modal -->
+<div id="helpSupportModal" class="modal fade" tabindex="-1" aria-labelledby="helpSupportModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="helpSupportModalLabel">Help & Support</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p><strong>Contact Information</strong></p>
+        <ul class="list-unstyled mb-2">
+          <li><i class="fas fa-phone-alt me-2"></i> <b>Phone:</b> 0942355466</li>
+          <li><i class="fas fa-envelope me-2"></i> <b>Email:</b> info@ethsgebeya.com</li>
+          <li><i class="fas fa-map-marker-alt me-2"></i> <b>Location:</b> Butajira, Ethiopia</li>
+        </ul>
+        <p class="mb-0">For any questions or support, please contact us using the information above. We're here to help!</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function showHelpSupport() {
+    var modal = new bootstrap.Modal(document.getElementById('helpSupportModal'));
+    modal.show();
+}
+</script>
+<script src="{% static 'js/sidebar_buyer_cart_counter.js' %}"></script>
+<script src="{% static 'js/sidebar_order_counter.js' %}"></script>
+</body>
+</html>

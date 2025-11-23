@@ -1,0 +1,60 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+venv/
+.env
+*.env
+
+# Django artifacts
+*.log
+local_settings.py
+secret_key.txt
+
+# Databases
+*.sqlite3
+*.db
+
+# Media & user uploads
+media/
+
+# Node / front-end (if added later)
+node_modules/
+
+# Static collection output
+staticfiles_collected/
+
+# IDE/editor
+.vscode/
+.idea/
+*.swp
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Coverage / test
+.coverage
+htmlcov/
+
+# Backup / temp
+*.bak
+*.tmp
+tmp/
+
+# Deployment artifacts
+passenger_wsgi.py
+stderr.log
+
+# Ignore compiled assets in app static if generated elsewhere
+warehouse/static/
+staticfiles/admin/
+staticfiles/icon/
+staticfiles/img/
+staticfiles/js/
+staticfiles/css/
+
+# If you want to keep source static, comment out above lines and add selective ignores.

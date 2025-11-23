@@ -1,0 +1,163 @@
+{% extends 'warehouse/base.html' %}
+
+{% block title %}Customers · Followers{% endblock %}
+
+{% block styles %}
+<style>
+/* Scoped styles for customers page */
+:root {
+        --brand-color: #4da6ff;
+        --brand-light: #e6f2ff;
+        --brand-dark: #1a75ff;
+        --brand-gradient: linear-gradient(135deg, #4da6ff 0%, #1a75ff 100%);
+        --text-dark: #2C3E50;
+        --text-light: #7F8C8D;
+        --white: #ffffff;
+        --shadow: 0 4px 15px rgba(77, 166, 255, 0.12);
+        --shadow-hover: 0 8px 25px rgba(77, 166, 255, 0.18);
+}
+.cust-header {
+        background: var(--brand-gradient);
+        color: white;
+        padding: 1.2rem 1rem;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+}
+.cust-header h1 { font-size: 1.4rem; font-weight: 700; margin: 0; }
+.cust-container { max-width: 1200px; margin: -1rem auto 1.5rem; padding: 0 1rem; position: relative; z-index: 3; }
+.cust-controls { background: var(--white); padding: 1rem; border-radius: 12px; box-shadow: var(--shadow); margin-bottom: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+.cust-search { position: relative; width: 100%; }
+.cust-search input { width: 100%; padding: .8rem .8rem .8rem 2.5rem; border: 1.5px solid var(--brand-light); border-radius: 10px; font-size: .9rem; outline: none; transition: all .3s ease; background: var(--white); }
+.cust-search i { position: absolute; left: .8rem; top: 50%; transform: translateY(-50%); color: var(--brand-color); font-size: 1rem; }
+.cust-tags { display: flex; gap: .6rem; flex-wrap: wrap; justify-content: center; }
+.cust-tag { padding: .5rem 1rem; background: var(--brand-light); border: none; border-radius: 16px; cursor: pointer; transition: all .3s ease; font-weight: 600; color: var(--brand-color); font-size: .8rem; white-space: nowrap; }
+.cust-tag.active { background: var(--brand-color); color: white; }
+.followers-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; }
+.follower-card { background: var(--white); border-radius: 12px; padding: 1rem; box-shadow: var(--shadow); transition: all .3s ease; border: 1.5px solid var(--brand-light); display: flex; align-items: center; gap: 1rem; }
+.follower-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-hover); border-color: var(--brand-color); }
+.follower-avatar { width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.3rem; font-weight: bold; flex-shrink: 0; box-shadow: 0 4px 12px rgba(77,166,255,.25); background: var(--brand-gradient); position: relative; }
+.online-status { position: absolute; bottom: 2px; right: 2px; width: 12px; height: 12px; border-radius: 50%; background: #27AE60; border: 2px solid var(--white); }
+.offline .online-status { background: #95a5a6; }
+.follower-info { flex: 1; min-width: 0; }
+.follower-name { font-size: 1rem; font-weight: 700; margin-bottom: .3rem; color: var(--text-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.follower-username { font-size: .8rem; color: var(--text-light); margin-bottom: .5rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.follower-stats { display: flex; gap: 1rem; }
+.follower-stat { display: flex; align-items: center; gap: .3rem; font-size: .8rem; color: var(--text-light); white-space: nowrap; }
+.follower-actions { display: flex; gap: .5rem; align-items: center; flex-shrink: 0; }
+.btn-c { padding: .5rem .8rem; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all .3s ease; font-size: .8rem; display: flex; align-items: center; gap: .3rem; white-space: nowrap; }
+.btn-primary-c { background: var(--brand-gradient); color: white; }
+.btn-secondary-c { background: transparent; border: 1.5px solid var(--brand-color); color: var(--brand-color); }
+.empty-state { text-align: center; padding: 2rem 1rem; color: var(--text-light); grid-column: 1 / -1; }
+@media (max-width: 767px){ .cust-header{padding:1rem} .cust-container{margin:-.8rem auto 1rem} .follower-card{padding:.8rem} .follower-avatar{width:45px;height:45px;font-size:1.1rem} }
+</style>
+{% endblock %}
+
+{% block page_title %}
+<h1>Customers</h1>
+{% endblock %}
+
+{% block content %}
+<div class="cust-header">
+    <h1>Followers - Customers</h1>
+    <p class="mb-0">Manage and connect with your customers and followers</p>
+    </div>
+
+<div class="cust-container">
+    <div class="cust-controls">
+        <div class="cust-search">
+            <i class="fas fa-search"></i>
+            <input type="text" id="searchInput" placeholder="Search customers...">
+        </div>
+        <div class="cust-tags">
+            <button class="cust-tag active" data-category="all">All</button>
+            <button class="cust-tag" data-category="online">Online</button>
+            <button class="cust-tag" data-category="vip">VIP</button>
+            <button class="cust-tag" data-category="new">New</button>
+            <button class="cust-tag" data-category="active">Active</button>
+        </div>
+    </div>
+
+    <div class="followers-grid" id="followersGrid"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script id="followers-data" type="application/json">{{ followers_json|safe }}</script>
+<script>
+    // Server-provided followers
+    const dataEl = document.getElementById('followers-data');
+    const followersData = dataEl ? JSON.parse(dataEl.textContent || '[]') : [];
+
+    const followersGrid = document.getElementById('followersGrid');
+    const searchInput = document.getElementById('searchInput');
+    const filterTags = document.querySelectorAll('.cust-tag');
+
+    function renderFollowers(list){
+        followersGrid.innerHTML = '';
+        if (!list || list.length === 0){
+            followersGrid.innerHTML = `<div class="empty-state"><h3>No customers found</h3><p>Try adjusting your search or filter</p></div>`;
+            return;
+        }
+        list.forEach(f => {
+            const card = document.createElement('div');
+            card.className = `follower-card ${!f.isOnline ? 'offline' : ''}`;
+            card.innerHTML = `
+                <div class="follower-avatar">${f.initial}<div class="online-status"></div></div>
+                <div class="follower-info">
+                    <div class="follower-name">${f.name} ${f.isVIP ? '<i class="fas fa-crown" style="color:#FFD700;margin-left:5px"></i>' : ''}</div>
+                    <div class="follower-username">${f.username}</div>
+                    <div class="follower-stats">
+                        <div class="follower-stat"><i class="fas fa-shopping-bag" style="color:var(--brand-color);font-size:.8rem"></i>${f.orders} orders</div>
+                    </div>
+                </div>
+                <div class="follower-actions">
+                    <button class="btn-c btn-primary-c" data-action="message" data-id="${f.id}"><i class="fas fa-comment"></i> Message</button>
+                    <button class="btn-c btn-secondary-c" data-action="profile" data-id="${f.id}"><i class="fas fa-eye"></i> Profile</button>
+                </div>`;
+            followersGrid.appendChild(card);
+        });
+    }
+
+    function currentCategory(){ const a = document.querySelector('.cust-tag.active'); return a? a.dataset.category : 'all'; }
+
+    function filterFollowers(){
+        const term = (searchInput.value || '').toLowerCase();
+        const cat = currentCategory();
+        const filtered = (followersData||[]).filter(f => {
+            const matches = (f.name||'').toLowerCase().includes(term) || (f.username||'').toLowerCase().includes(term);
+            let ok = true;
+            if (cat === 'online') ok = !!f.isOnline;
+            else if (cat === 'vip') ok = !!f.isVIP;
+            else if (cat === 'new') ok = f.status === 'new';
+            else if (cat === 'active') ok = f.status === 'active';
+            return matches && ok;
+        });
+        renderFollowers(filtered);
+    }
+
+    searchInput.addEventListener('input', filterFollowers);
+    filterTags.forEach(tag => tag.addEventListener('click', () => {
+        filterTags.forEach(t => t.classList.remove('active'));
+        tag.classList.add('active');
+        filterFollowers();
+    }));
+
+    // Actions
+    document.addEventListener('click', (e) => {
+        const btn = e.target.closest('button.btn-c');
+        if (!btn) return;
+        const id = btn.dataset.id;
+        const action = btn.dataset.action;
+        const customer = (followersData||[]).find(x => String(x.id) === String(id));
+        if (!customer) return;
+        if (action === 'message') {
+            alert(`Messaging ${customer.name}`);
+        } else if (action === 'profile') {
+            alert(`Viewing ${customer.name}'s profile`);
+        }
+    });
+
+        renderFollowers(followersData||[]);
+</script>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends 'warehouse/base.html' %}
+{% block content %}
+<div class="container py-5">
+    <div class="card shadow-sm mx-auto" style="max-width: 400px;">
+        <div class="card-body text-center">
+            <h4 class="mb-3">Delete Product</h4>
+            <p>Are you sure you want to delete <strong>{{ product.title }}</strong>?</p>
+            <form method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">Yes, Delete</button>
+                <a href="{% url 'seller_products' %}" class="btn btn-secondary ms-2">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

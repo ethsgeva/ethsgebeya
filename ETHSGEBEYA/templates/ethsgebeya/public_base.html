@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>{% block title %}ETHSGEBEYA{% endblock %}</title>
+    {% load static %}
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{% static 'img/logo.jpg' %}" sizes="32x32">
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="ETHSGEBEYA - The best place to buy and sell products in Ethiopia. Secure, fast, and easy e-commerce for everyone.">
+    <meta name="keywords" content="Ethiopia, e-commerce, online shop, buy, sell, marketplace, ETHSGEBEYA">
+    <meta name="author" content="ETHSGEBEYA Team">
+    <meta property="og:title" content="ETHSGEBEYA - Ethiopia's Marketplace">
+    <meta property="og:description" content="Buy and sell products easily on ETHSGEBEYA. Secure, fast, and user-friendly.">
+    <meta property="og:image" content="{% static 'img/logo.jpg' %}">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="ETHSGEBEYA - Ethiopia's Marketplace">
+    <meta name="twitter:description" content="Buy and sell products easily on ETHSGEBEYA.">
+    <meta name="twitter:image" content="{% static 'img/logo.jpg' %}">
+    <!-- Accessibility: Skip to content -->
+    <a href="#main-content" class="visually-hidden-focusable skip-link">Skip to main content</a>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        html, body {
+            max-width: 100vw;
+            overflow-x: hidden;
+            height: 100%; /* enable sticky footer */
+        }
+        .skip-link {
+            position: absolute;
+            left: -999px;
+            top: auto;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+            z-index: 10000;
+        }
+        .skip-link:focus {
+            left: 10px;
+            top: 10px;
+            width: auto;
+            height: auto;
+            background:rgb(1, 1, 2);
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 4px;
+            outline: 2px solid #36b9cc;
+        }
+        {% comment %} html, body {
+            max-width: 100vw;
+            overflow-x: hidden;
+        } {% endcomment %}
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #f8f9fc;
+            color: #212529;
+            margin: 0; /* remove default browser margins to avoid white edges */
+            padding: 0; /* ensure no default body padding */
+            display: flex; /* sticky footer layout */
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        .navbar {
+            background: linear-gradient(135deg,rgb(126, 136, 146) 0%, #1a1d20 100%);
+            color: white;
+        }
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: white;
+        }
+        .navbar-brand img {
+            height: 40px;
+            margin-right: 10px;
+        }
+        /* Keep base neutral so pages control their own layout */
+        .main-content {
+            display: block;
+            width: 100%;
+            min-height: auto; /* pages control their own height */
+            margin: 0;
+            padding: 0; /* remove any default padding so edge-to-edge sections can bleed */
+            flex: 1 0 auto; /* take remaining height so footer pushes to bottom */
+        }
+        .footer { flex-shrink: 0; }
+        .footer {
+            background: #fff;
+            color: #858796;
+            text-align: center;
+            padding: 20px 0;
+            font-size: 0.95rem;
+        }
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 0.5rem !important;
+            }
+            .hero-section {
+                min-height: 55vh !important;
+                padding: 1.2rem 0.5rem 1.2rem 0.5rem !important;
+            }
+            .features-section {
+                padding: 1.2rem 0.5rem 1.2rem 0.5rem !important;
+                margin-bottom: 0.5rem !important;
+            }
+            .cta-section {
+                padding: 1.2rem 0.5rem 1.2rem 0.5rem !important;
+                margin: 0 !important;
+            }
+            .footer,
+            .footer .container {
+                padding: 0.7rem 0.5rem 0.7rem 0.5rem !important;
+                margin: 0 !important;
+            }
+            .row, .container, .navbar, .navbar + hr, .navbar + hr + .navbar {
+                margin-top: 0 !important;
+                margin-bottom: 0 !important;
+                padding-top: 0 !important;
+                padding-bottom: 0 !important;
+            }
+        }
+        .navbar,
+        .navbar + hr,
+        .navbar + hr + .navbar,
+        .container {
+            margin-bottom: 0 !important;
+            padding-bottom: 0 !important;
+        }
+        main.main-content {
+            margin-top: 0 !important;
+            padding-top: 0 !important;
+        }
+        .hero-section {
+            margin-top: 0 !important;
+            padding-top: 0 !important;
+        }
+        /* Do not globally zero out footer spacing; leave it to pages to style */
+        @media (max-width: 768px) {
+            .navbar,
+            .navbar + hr,
+            .navbar + hr + .navbar,
+            .container,
+            main.main-content,
+            .hero-section {
+                margin-top: 0 !important;
+                margin-bottom: 0 !important;
+                padding-top: 0 !important;
+                padding-bottom: 0 !important;
+            }
+        }
+    </style>
+    <style>
+        /* Modern header styles from home_modern.html */
+        .navbar-main { background: var(--white, #fff); padding: 15px 0; border-bottom: 1px solid var(--neutral-400, #D1D5DB); box-shadow: 0 4px 15px rgba(0,0,0,0.08); z-index: 1000; }
+        .nav-main-content { display: flex; justify-content: space-between; align-items: center; }
+        .logo-main { font-size: 32px; font-weight: bold; color: #0B78FF; text-decoration: none; display:flex; align-items:center; gap: 10px; text-shadow: 0 2px 4px rgba(11,120,255,.2); }
+        .nav-main-actions { display:flex; align-items:center; gap:25px; }
+        .search-bar { display:flex; align-items:center; background: #fff; border-radius: 50px; padding:0; border:2px solid #D1D5DB; min-width: 450px; transition: all .3s; box-shadow: 0 4px 12px rgba(0,0,0,.1); overflow:hidden; }
+        .search-bar:focus-within { border-color: #0B78FF; box-shadow: 0 4px 20px rgba(11,120,255,.3); transform: translateY(-2px); }
+        .search-bar input { border:none; background:none; outline:none; padding:15px 20px; width:100%; color: #374151; font-size:16px; }
+        .search-button { background: linear-gradient(135deg, #0B78FF 0%, #1a237e 100%); border:none; color:#fff; padding:15px 25px; border-radius: 0 50px 50px 0; cursor:pointer; transition: all .3s; font-weight:600; display:flex; align-items:center; gap:8px; }
+        .search-button:hover { background: linear-gradient(135deg,#1a237e 0%, #0B78FF 100%); transform: scale(1.05); }
+        .auth-buttons { display:flex; gap:12px; }
+        .btn { padding:12px 28px; border:none; border-radius:50px; font-size:15px; font-weight:600; cursor:pointer; text-decoration:none; display:inline-block; transition: all .4s; text-align:center; }
+        .btn-outline { background:transparent; color: #0B78FF; border:2px solid #0B78FF; box-shadow: 0 2px 8px rgba(11,120,255,.2); }
+        .btn-outline:hover { background: #0B78FF; color:#fff; transform: translateY(-3px); box-shadow: 0 6px 20px rgba(11,120,255,.4); }
+        .btn-primary { background: linear-gradient(135deg, #0B78FF 0%, #1a237e 100%); color:#fff; box-shadow: 0 4px 15px rgba(11,120,255,.3); }
+        .btn-primary:hover { background: linear-gradient(135deg,#1a237e 0%, #0B78FF 100%); transform: translateY(-3px) scale(1.05); box-shadow: 0 8px 25px rgba(11,120,255,.5); }
+        .navbar-secondary { background: #1a237e; padding: 12px 0; position: sticky; top: 0; z-index: 999; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .nav-secondary-content { display:flex; justify-content: space-between; align-items:center; }
+        .business-types-nav { display:flex; gap:35px; }
+        .business-types-nav a { color:#fff; text-decoration:none; font-weight:600; font-size:16px; transition: all .3s; padding:8px 16px; border-radius:25px; position:relative; }
+        .business-types-nav a:hover { color: #FF6A2B; background: rgba(255,255,255,.15); transform: translateY(-2px); }
+        .business-types-nav a.active { color: #FF6A2B; font-weight:700; background: rgba(255,255,255,.10); box-shadow: 0 4px 12px rgba(255,106,43,.3); }
+        .business-types-nav a.active::after { content:''; position:absolute; bottom:-2px; left:50%; transform: translateX(-50%); width:30px; height:3px; background: #FF6A2B; border-radius:2px; }
+        .nav-extra { display:flex; gap:30px; }
+        .nav-extra a { color:#fff; text-decoration:none; font-weight:600; font-size:16px; display:flex; align-items:center; gap:10px; transition: all .3s; padding:8px 16px; border-radius:25px; }
+        .nav-extra a:hover { color: #FF6A2B; background: rgba(255,255,255,.15); transform: translateY(-2px); }
+        @media (max-width: 768px) {
+            .nav-main-content{ flex-direction:column; gap:20px; }
+            .nav-main-actions{ flex-direction:column; gap:15px; width:100%; }
+            .search-bar{ min-width:100%; }
+        }
+    </style>
+    {% block styles %}{% endblock %}
+</head>
+<body>
+    {% include 'ethsgebeya/partials/header_modern.html' %}
+    <main id="main-content" class="main-content" tabindex="-1">
+        {% block content %}{% endblock %}
+    </main>
+    {% block footer %}
+    <footer class="footer bg-dark text-white py-4 mt-0 w-100" style="font-size: 1.15rem; text-align: center; font-weight: 600; letter-spacing: 0.5px;">
+        <div class="container">
+            &copy; 2025 ETHSGEBEYA. All rights reserved.
+        </div>
+    </footer>
+    {% endblock %}
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Expose auth/role to JS for conditional polling
+        window.isAuthenticated = {% if user.is_authenticated %}true{% else %}false{% endif %};
+        window.userRole = {% if user.is_authenticated %}'{{ request.user.profile.role }}'{% else %}'guest'{% endif %};
+        window.userIsSeller = (window.isAuthenticated && window.userRole === 'seller');
+    </script>
+    <script src="{% static 'js/seller_notif_counter.js' %}"></script>
+    <script>
+        // Real-time counters for cart and notifications
+        function updateCartCounter(count) {
+            const cartCounter = document.getElementById('cart-counter');
+            if (cartCounter) {
+                cartCounter.textContent = count;
+                cartCounter.style.display = 'inline-block'; // Always show
+            }
+            // Also update sidebar badge if present
+            const sidebarBadge = document.getElementById('sidebar-buyer-cart-badge');
+            if (sidebarBadge) {
+                if (count > 0) {
+                    sidebarBadge.textContent = count;
+                    sidebarBadge.style.display = 'inline-block';
+                } else {
+                    sidebarBadge.textContent = 0;
+                    sidebarBadge.style.display = 'inline-block'; // Always show, even if zero
+                }
+            }
+        }
+        function updateNotifCounter(count) {
+            const notifCounter = document.getElementById('notif-counter');
+            if (notifCounter) {
+                notifCounter.textContent = count;
+                notifCounter.style.display = count > 0 ? 'inline-block' : 'none';
+            }
+        }
+        // Fetch counters via AJAX – only when authenticated
+        function fetchCounters() {
+            if (!window.isAuthenticated) return; // guests should not call authenticated APIs
+            const cacheBuster = '?_=' + new Date().getTime();
+            if (window.userIsSeller) {
+                fetch('/warehouse/api/seller/order-notifications/' + cacheBuster)
+                    .then(r => r.json())
+                    .then(data => updateNotifCounter(data.count || 0));
+            } else {
+                fetch('/warehouse/api/buyer/cart-count/' + cacheBuster)
+                    .then(r => r.json())
+                    .then(data => updateCartCounter(data.count || 0));
+                fetch('/warehouse/api/buyer/order-notifications/' + cacheBuster)
+                    .then(r => r.json())
+                    .then(data => updateNotifCounter(data.count || 0));
+            }
+        }
+        if (window.isAuthenticated) { fetchCounters(); setInterval(fetchCounters, 10000); }
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

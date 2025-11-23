@@ -1,0 +1,34 @@
+{% extends 'ethsgebeya/public_base.html' %}
+
+{% load static %}
+
+{% block title %}Welcome to ETHSGEBEYA - Ethiopia's Modern Marketplace{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row align-items-center">
+        <div class="col-md-6 mb-4 mb-md-0">
+            <h1 class="display-4 fw-bold mb-3">ETHSGEBEYA</h1>
+            <p class="lead mb-4">The modern e-commerce platform for Ethiopian sellers and buyers. Discover, shop, and grow your business with us!</p>
+            <ul class="list-unstyled mb-4">
+                <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> Sell and manage your products easily</li>
+                <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> Secure checkout and fast delivery</li>
+                <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> Analytics and tools for sellers</li>
+                <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> 24/7 support for all users</li>
+            </ul>
+            <a href="{% url 'product_list' %}" class="btn btn-success btn-lg me-2 mb-2">Browse Products</a>
+            <a href="{% url 'sign-up' %}" class="btn btn-primary btn-lg me-2">Get Started</a>
+            <a href="{% url 'sign-in' %}" class="btn btn-outline-primary btn-lg">Sign In</a>
+        </div>
+        <div class="col-md-6 text-center">
+            <img src="{% static 'img/landing-hero.png' %}" alt="ETHSGEBEYA Marketplace" class="img-fluid rounded shadow">
+        </div>
+    </div>
+    <div class="row mt-5">
+        <div class="col text-center">
+            <h2 class="fw-bold mb-3">Why ETHSGEBEYA?</h2>
+            <p class="mb-4">We empower Ethiopian entrepreneurs and connect buyers with quality products. Join our growing community today!</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

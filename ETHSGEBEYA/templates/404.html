@@ -1,0 +1,13 @@
+{% extends 'ethsgebeya/public_base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container d-flex align-items-center justify-content-center min-vh-100" style="background: #FFFCFB;">
+    <div class="card shadow-lg p-5 text-center" style="max-width: 420px; width: 100%; border-radius: 18px; border: none; background: rgba(255,255,255,0.97);">
+        <img src="{% static 'img/logo.jpg' %}" alt="ETHSGEBEYA Logo" style="width: 70px; height: 70px; border-radius: 16px; margin-bottom: 18px; box-shadow: 0 2px 8px #093FB420;">
+        <h1 class="mb-3 text-danger fw-bold">Page Not Found</h1>
+        <p class="lead mb-4">Sorry, the page you are looking for does not exist or you do not have permission to view it.</p>
+        <a href="/" class="btn btn-lg px-5" style="background: linear-gradient(90deg, #093FB4 0%, #ED3500 100%); color: #fff; border-radius: 30px; font-weight: 600;">Go to Home</a>
+    </div>
+</div>
+{% endblock %}
