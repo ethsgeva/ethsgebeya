@@ -5,6 +5,35 @@ __pycache__/
 *.pyd
 
 # Virtual environments
+.venv/
+venv/
+env/
+.env
+
+# Django
+db.sqlite3
+media/
+staticfiles/
+staticfiles_collected/
+tmp/
+stderr.log
+
+# VS Code
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
 venv/
 .env
 *.env
