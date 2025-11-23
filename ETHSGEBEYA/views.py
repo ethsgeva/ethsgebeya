@@ -18,6 +18,7 @@ from .forms import ResendActivationEmailForm
 from django.utils.html import strip_tags
 import os
 from warehouse.models import SellerProfile
+from django.utils import timezone
 from django.db.models import Count, Avg, Q
 import json
 
@@ -159,7 +160,9 @@ def check_env(request):
 
 
 def companies(request):
-    """Public page: list companies (SellerProfile) with stats and category buckets."""
+    """Public page: list companies using the new card layout template.
+    Supplies a queryset as `following_sellers` to match the template expectations.
+    """
     sellers_qs = (
         SellerProfile.objects
         .annotate(
@@ -170,47 +173,20 @@ def companies(request):
         .order_by('-followers_count', 'company_name')
     )
 
-    def map_category(name: str | None) -> str:
-        if not name:
-            return 'service'
-        n = name.lower()
-        if any(k in n for k in ['cafe', 'coffee']):
-            return 'cafe'
-        if any(k in n for k in ['restaurant', 'food', 'eatery']):
-            return 'restaurant'
-        if any(k in n for k in ['shop', 'store', 'market', 'retail', 'boutique', 'fashion', 'grocery']):
-            return 'retail'
-        return 'service'
-
-    companies = []
-    user = request.user if request.user.is_authenticated else None
-    for s in sellers_qs:
-        first_category = None
+    now_time = timezone.localtime().time()
+    sellers = list(sellers_qs)
+    for s in sellers:
         try:
-            fp = s.product_set.filter(is_active=True, category__isnull=False).select_related('category').first()
-            if fp and fp.category:
-                first_category = fp.category.name
+            if s.opening_time and s.closing_time:
+                s.is_open_now = (s.opening_time <= now_time <= s.closing_time)
+            else:
+                s.is_open_now = False
         except Exception:
-            first_category = None
-        bucket = map_category(first_category)
-        icon = {'cafe':'coffee','restaurant':'utensils','retail':'shopping-bag','service':'tools'}.get(bucket, 'building')
-        companies.append({
-            'id': s.id,
-            'name': s.company_name,
-            'category': bucket,
-            'initial': ''.join([w[0] for w in s.company_name.split()[:2]]).upper() if s.company_name else 'CO',
-            'followers': s.followers_count or 0,
-            'rating': round((s.avg_rating or 0.0), 1),
-            'products': s.products_count or 0,
-            'description': (s.description or '')[:300],
-            'icon': icon,
-            'is_following': (user is not None and s.followers.filter(id=user.id).exists()),
-        })
+            s.is_open_now = False
 
-    ctx = {
-        'companies_json': json.dumps(companies),
-    }
-    return render(request, 'ethsgebeya/companies.html', ctx)
+    return render(request, 'ethsgebeya/companies.html', {
+        'following_sellers': sellers,
+    })
     
     
 @login_required
