@@ -15,8 +15,9 @@
     .filter-tags{ display:flex; gap:.6rem; flex-wrap:wrap; justify-content:center; }
     .filter-tag{ padding:.5rem 1rem; background:var(--brand-light); border:none; border-radius:16px; cursor:pointer; font-weight:600; color:var(--brand-color); font-size:.85rem; }
     .filter-tag.active{ background:var(--brand-color); color:#fff; }
-    .companies-grid{ display:grid; grid-template-columns:1fr; gap:1rem; }
-    .company-card{ background:#fff; border-radius:12px; overflow:hidden; box-shadow:var(--shadow); border:1.5px solid var(--brand-light); }
+    /* Masonry-style columns to avoid large white gaps */
+    .companies-grid{ column-count:1; column-gap:1rem; }
+    .company-card{ background:#fff; border-radius:12px; overflow:hidden; box-shadow:var(--shadow); border:1.5px solid var(--brand-light); display:inline-block; width:100%; margin:0 0 1rem; break-inside:avoid; }
     .company-card::before{ content:''; display:block; height:3px; background:var(--brand-gradient); }
     .company-header{ padding:1rem; display:flex; gap:.8rem; }
     .company-avatar{ width:50px; height:50px; border-radius:12px; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; background:var(--brand-gradient); overflow:hidden; }
@@ -27,8 +28,8 @@
     .btn{ padding:.35rem .6rem; border-radius:8px; font-weight:600; font-size:.875rem; }
     .btn-primary{ background:var(--brand-gradient); color:#fff; }
     .btn-secondary{ background:transparent; border:1.5px solid var(--brand-color); color:var(--brand-color); }
-    @media(min-width:768px){ .companies-grid{ grid-template-columns:repeat(2,1fr); } }
-    @media(min-width:1024px){ .companies-grid{ grid-template-columns:repeat(3,1fr); } }
+    @media(min-width:768px){ .companies-grid{ column-count:2; } }
+    @media(min-width:1024px){ .companies-grid{ column-count:3; } }
 </style>
 {% endblock %}
 
@@ -50,6 +51,14 @@
             <button class="filter-tag" data-category="cafe_restaurant"><i class="fas fa-coffee"></i> Cafes & Restaurants</button>
             <button class="filter-tag" data-category="service_provider"><i class="fas fa-tools"></i> Service Providers</button>
         </div>
+    </div>
+
+    <!-- Empty state container (toggled by JS when last card removed) -->
+    <div id="emptyFollowedState" class="text-center text-muted py-5 w-100" style="display: {% if followed_sellers %}none{% else %}block{% endif %};">
+        <i class="fas fa-store-slash fa-2x d-block mb-2"></i>
+        <h5>No companies followed yet</h5>
+        <p>Start following companies to see them here</p>
+        <a href="{% url 'companies_explore' %}" class="btn btn-primary mt-3"><i class="fas fa-compass me-1"></i> Explore Companies</a>
     </div>
 
     <div class="companies-grid" id="followedGrid">
@@ -99,13 +108,6 @@
                 </form>
             </div>
         </div>
-        {% empty %}
-        <div class="text-center text-muted py-5 w-100">
-            <i class="fas fa-store-slash fa-2x d-block mb-2"></i>
-            <h5>No companies followed yet</h5>
-            <p>Start following companies to see them here</p>
-            <a href="{% url 'companies_explore' %}" class="btn btn-primary mt-3"><i class="fas fa-compass me-1"></i> Explore Companies</a>
-        </div>
         {% endfor %}
     </div>
 </div>
@@ -134,7 +136,14 @@
                         else{ btn.innerHTML='<i class="fas fa-user-plus me-1"></i> Follow';
                             // On followed page, remove card when unfollowed
                             const grid=document.getElementById('followedGrid');
-                            if(grid && card && grid.contains(card)){ card.remove(); }
+                            if(grid && card && grid.contains(card)){
+                                card.remove();
+                                // If no more cards, show empty state instantly
+                                if(!grid.querySelector('.company-card')){
+                                    const es=document.getElementById('emptyFollowedState');
+                                    if(es){ es.style.display='block'; }
+                                }
+                            }
                         }
                     }
                 }catch(err){ console.error(err); }
