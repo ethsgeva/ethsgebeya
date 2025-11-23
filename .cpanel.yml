@@ -1,0 +1,7 @@
+---
+deployment:
+  tasks:
+    # 1. Define deployment target path on the server
+    - export DEPLOYPATH=/home/ethsgeva/ethsgebeya.com
+    # 2. Sync repository contents to deployment path excluding git metadata and this recipe file
+    - /usr/bin/rsync -av --exclude '.git' --exclude '.cpanel.yml' . $DEPLOYPATH
