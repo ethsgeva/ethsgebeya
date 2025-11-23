@@ -125,7 +125,8 @@
                 btn.disabled=true;
                 try{
                     const res=await fetch(form.action,{method:'POST',headers:{'X-CSRFToken':csrf,'X-Requested-With':'XMLHttpRequest'}});
-                    if(!res.ok){ window.location.href='/sign-in/'; return; }
+                    const ct=res.headers.get('content-type')||'';
+                    if(!ct.includes('application/json')){ window.location.href='/sign-in/'; return; }
                     const data=await res.json();
                     if(typeof data.followed!=="undefined"){ // warehouse api
                         if(followersEl && typeof data.followers!=="undefined"){ followersEl.textContent=data.followers; }
