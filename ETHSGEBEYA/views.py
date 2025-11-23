@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
 from django.contrib.auth.models import User
@@ -9,7 +9,7 @@ from django.utils.encoding import force_bytes, force_str
 from django.template.loader import render_to_string
 from django.contrib.sites.shortcuts import get_current_site
 from django.contrib.auth.tokens import default_token_generator
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.contrib.auth import login
 from warehouse.forms import CustomUserCreationForm, UserProfileForm
 from django.contrib.auth.decorators import login_required
@@ -176,19 +176,47 @@ def companies(request):
 
     now_time = timezone.localtime().time()
     all_sellers = list(base_qs)
+    user_id = request.user.id if request.user.is_authenticated else None
     for s in all_sellers:
         try:
             s.is_open_now = bool(s.opening_time and s.closing_time and s.opening_time <= now_time <= s.closing_time)
         except Exception:
             s.is_open_now = False
+        # Precompute follow status to avoid unsupported queryset method chaining in template
+        if user_id:
+            s.is_following = s.followers.filter(id=user_id).exists()
+        else:
+            s.is_following = False
 
-    if request.user.is_authenticated:
-        followed_sellers = [s for s in all_sellers if s.followers.filter(id=request.user.id).exists()]
-    else:
-        followed_sellers = []
+    followed_sellers = [s for s in all_sellers if s.is_following]
 
     return render(request, 'ethsgebeya/companies.html', {
         'followed_sellers': followed_sellers,
+    })
+
+def companies_explore(request):
+    """Separate Explore Companies page showing all sellers."""
+    base_qs = (
+        SellerProfile.objects
+        .annotate(
+            products_count=Count('product', filter=Q(product__is_active=True), distinct=True),
+            followers_count=Count('followers', distinct=True),
+            avg_rating=Avg('product__reviews__rating'),
+        )
+        .order_by('-followers_count', 'company_name')
+    )
+
+    now_time = timezone.localtime().time()
+    all_sellers = list(base_qs)
+    user_id = request.user.id if request.user.is_authenticated else None
+    for s in all_sellers:
+        try:
+            s.is_open_now = bool(s.opening_time and s.closing_time and s.opening_time <= now_time <= s.closing_time)
+        except Exception:
+            s.is_open_now = False
+        s.is_following = s.followers.filter(id=user_id).exists() if user_id else False
+
+    return render(request, 'ethsgebeya/explore_companies.html', {
         'all_sellers': all_sellers,
     })
     
