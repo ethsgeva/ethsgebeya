@@ -3,15 +3,14 @@
 
 {% block content %}
 <div class="container py-4">
-    <h2 class="mb-4 text-center" style="font-weight:700; color:#212529; letter-spacing:1px;">Settings & Orders</h2>
     <div class="row">
-        <div class="col-12 col-md-3 mb-3 mb-md-0">
-            <div class="list-group mb-4 shadow-sm rounded-3">
+        <div class="col-12 col-lg-3 mb-4">
+            <div class="list-group shadow-sm rounded-3">
                 <a href="{% url 'setting' %}" class="list-group-item list-group-item-action">Profile Settings</a>
                 <a href="{% url 'settings_orders_page' %}" class="list-group-item list-group-item-action active">Orders & Wishlist</a>
             </div>
         </div>
-        <div class="col-12 col-md-9">
+        <div class="col-12 col-lg-9">
             {% if role == 'buyer' %}
                 <div class="card shadow-sm mb-4 border-0 rounded-4">
                     <div class="card-body">
@@ -160,102 +159,97 @@
                     </div>
                 </div>
             {% elif role == 'seller' %}
-                <h2 class="mb-4 d-flex align-items-center gap-2" style="color:#224abe;font-weight:700;">
-                  <i class="fas fa-clipboard-list" style="color:#36b9cc;"></i> Seller Orders
-                  <span class="badge bg-success" style="font-size:1rem;">Live</span>
-                </h2>
-                <div class="row g-4">
-                    <div class="col-12 col-lg-6">
-                        <div class="card shadow-sm border-0 rounded-4 h-100 animate__animated animate__fadeInUp">
-                            <div class="card-body">
-                                <h4 class="mb-3" style="color:#858796; font-weight:600;">New Orders (Pending)</h4>
-                                {% if seller_pending_orders %}
-                                    <ul class="list-group mb-4">
-                                        {% for order in seller_pending_orders %}
-                                        <li class="list-group-item d-flex justify-content-between align-items-center border-0 border-bottom py-3" style="background:rgba(133,135,150,0.06);">
-                                            <span>
-                                                <span class="fw-bold" style="color:#224abe;">{{ order.product.title }}</span> (x{{ order.quantity }}) - <span style="color:#858796;">${{ order.total_price }}</span>
-                                                <span class="text-muted small ms-2">by {{ order.user.username }}</span>
-                                            </span>
-                                            <span class="badge bg-secondary">Pending</span>
-                                            <button class="btn btn-success btn-sm ms-2 animate__animated animate__pulse animate__infinite" onclick="markOrderAsCompleted('{{ order.id }}')">
-                                                <i class="fas fa-check-circle me-1"></i>Mark as Completed
-                                            </button>
-                                        </li>
-                                        {% endfor %}
-                                    </ul>
-                                {% else %}
-                                    <p class="text-center text-muted">No new orders.</p>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-12 col-lg-6">
-                        <div class="card shadow-sm border-0 rounded-4 h-100 animate__animated animate__fadeInUp">
-                            <div class="card-body">
-                                <h4 class="mb-3" style="color:#f6c23e; font-weight:600;">Orders Waiting for Buyer Confirmation</h4>
-                                {% if seller_waiting_orders %}
-                                    <ul class="list-group mb-4">
-                                        {% for order in seller_waiting_orders %}
-                                        <li class="list-group-item d-flex justify-content-between align-items-center border-0 border-bottom py-3" style="background:rgba(246,194,62,0.06);">
-                                            <span>
-                                                <span class="fw-bold" style="color:#f6c23e;">{{ order.product.title }}</span> (x{{ order.quantity }}) - <span style="color:#f6c23e;">${{ order.total_price }}</span>
-                                                <span class="text-muted small ms-2">by {{ order.user.username }}</span>
-                                            </span>
-                                            <span class="badge bg-warning text-dark">Waiting for Buyer Confirmation</span>
-                                            <span class="ms-2 text-info"><i class="fas fa-info-circle"></i> Waiting for buyer to confirm completion.</span>
-                                        </li>
-                                        {% endfor %}
-                                    </ul>
-                                {% else %}
-                                    <p class="text-center text-muted">No orders waiting for buyer confirmation.</p>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
+            <style>
+                :root { --primary:#4da8da; --primary-dark:#1e88e5; --danger:#e74c3c; --success:#27ae60; --warning:#f39c12; --gray-50:#f8f9fa; --gray-200:#eeeeee; --gray-600:#757575; --gray-800:#424242; }
+                .orders-shell{background:#fff;border:1px solid var(--gray-200);border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,.06);padding:1.5rem;margin-bottom:1.5rem;}
+                .orders-header h1{font-size:1.5rem;font-weight:700;color:#2c3e50;display:flex;align-items:center;gap:.6rem;margin:0 0 .5rem;}
+                .status-tabs{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1rem;}
+                .status-tab{padding:.55rem .9rem;border:1px solid var(--gray-200);border-radius:8px;background:#fff;font-size:.75rem;font-weight:600;color:#2c3e50;cursor:pointer;}
+                .status-tab.active{background:var(--primary);color:#fff;border-color:var(--primary);}
+                table.orders-table{width:100%;border-collapse:collapse;font-size:.85rem;}
+                table.orders-table th{background:var(--gray-50);text-align:left;padding:.7rem .6rem;font-weight:600;color:#2c3e50;border-bottom:1px solid var(--gray-200);}
+                table.orders-table td{padding:.65rem .6rem;border-bottom:1px solid var(--gray-200);vertical-align:middle;}
+                .badge-status{display:inline-block;padding:4px 9px;border-radius:999px;font-size:.65rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;}
+                .st-p{background:#adb5bd;color:#212529;}
+                .st-w{background:rgba(243,156,18,.15);color:var(--warning);}
+                .st-c{background:rgba(39,174,96,.15);color:var(--success);} 
+                .action-btn-sm{padding:4px 10px;border-radius:8px;border:1px solid var(--primary);background:#fff;color:var(--primary);font-size:.7rem;font-weight:600;cursor:pointer;}
+                .action-btn-sm:hover{background:var(--primary);color:#fff;}
+                .drawer{position:fixed;top:0;right:-420px;width:400px;height:100vh;background:#fff;box-shadow:-2px 0 12px rgba(0,0,0,.15);transition:.35s;z-index:1100;padding:1.25rem;overflow-y:auto;}
+                .drawer.open{right:0;}
+                .drawer h3{font-size:1.1rem;font-weight:700;margin:0 0 .75rem;}
+                .drawer-close{background:none;border:none;font-size:1.4rem;cursor:pointer;color:#777;}
+                @media(max-width:992px){.drawer{width:100%;}}
+            </style>
+            <div class="orders-shell orders-header">
+                <h1><i class="fas fa-clipboard-list text-primary"></i> Seller Orders</h1>
+                <p class="text-muted mb-2" style="font-size:.85rem;">Manage incoming orders, request completion, and review history.</p>
+                <div class="status-tabs" id="sellerStatusTabs">
+                    <div class="status-tab active" data-filter="all">All</div>
+                    <div class="status-tab" data-filter="P">Pending ({{ seller_pending_orders|length }})</div>
+                    <div class="status-tab" data-filter="W">Waiting ({{ seller_waiting_orders|length }})</div>
+                    <div class="status-tab" data-filter="C">Completed ({{ seller_completed_orders|length }})</div>
                 </div>
-                <div class="card shadow-sm mt-4 border-0 rounded-4 animate__animated animate__fadeInUp">
-                    <div class="card-body">
-                        <h4 class="mb-3" style="color:#1cc88a; font-weight:600;">Completed Orders</h4>
-                        {% if seller_completed_orders %}
-                            <ul class="list-group mb-4">
-                                {% for order in seller_completed_orders %}
-                                <li class="list-group-item d-flex justify-content-between align-items-center border-0 border-bottom py-3" style="background:rgba(28,200,138,0.06);">
-                                    <span>
-                                        <span class="fw-bold" style="color:#1cc88a;">{{ order.product.title }}</span> (x{{ order.quantity }}) - <span style="color:#1cc88a;">${{ order.total_price }}</span>
-                                        <span class="text-muted small ms-2">by {{ order.user.username }}</span>
-                                    </span>
-                                    <span class="badge bg-success">Completed</span>
-                                    <span class="text-muted small">{{ order.created_at|date:'Y-m-d H:i' }}</span>
-                                </li>
-                                {% endfor %}
-                            </ul>
-                        {% else %}
-                            <p class="text-center text-muted">No completed orders yet.</p>
-                        {% endif %}
-                    </div>
+                <div class="table-responsive">
+                    <table class="orders-table" id="sellerOrdersTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Product</th>
+                                <th>Buyer</th>
+                                <th>Qty</th>
+                                <th>Total</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for order in seller_orders %}
+                            <tr data-status="{{ order.status }}">
+                                <td>{{ order.id }}</td>
+                                <td><strong>{{ order.product.title }}</strong></td>
+                                <td>{{ order.user.username }}</td>
+                                <td>{{ order.quantity }}</td>
+                                <td>ETB {{ order.total_price }}</td>
+                                <td>
+                                    <span class="badge-status st-{{ order.status|lower }}">{{ order.get_status_display }}</span>
+                                </td>
+                                <td>{{ order.created_at|date:'Y-m-d H:i' }}</td>
+                                <td>
+                                    {% if order.status == 'P' %}
+                                        <button class="action-btn-sm" onclick="requestOrderComplete('{{ order.id }}','{{ order.user.id }}')">Request Complete</button>
+                                    {% elif order.status == 'W' %}
+                                        <span class="text-muted" style="font-size:.7rem;">Waiting buyer</span>
+                                    {% else %}
+                                        <span class="text-success" style="font-size:.7rem;">Done</span>
+                                    {% endif %}
+                                    <button class="action-btn-sm" onclick="openOrderDrawer('{{ order.id }}')">View</button>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr><td colspan="8" class="text-center text-muted">No orders yet.</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
-                <div class="card shadow-sm mt-4 border-0 rounded-4 animate__animated animate__fadeInUp">
-                    <div class="card-body">
-                        <h4 class="mb-3" style="color:#212529; font-weight:600;">All Orders</h4>
-                        {% if seller_orders %}
-                            <ul class="list-group mb-4">
-                                {% for order in seller_orders %}
-                                <li class="list-group-item d-flex justify-content-between align-items-center border-0 border-bottom py-3" style="background:rgba(33,37,41,0.04);">
-                                    <span>
-                                        <span class="fw-bold" style="color:#224abe;">{{ order.product.title }}</span> (x{{ order.quantity }}) - <span style="color:#212529;">${{ order.total_price }}</span>
-                                        <span class="text-muted small ms-2">by {{ order.user.username }}</span>
-                                    </span>
-                                    <span class="badge bg-secondary">{{ order.get_status_display }}</span>
-                                    <span class="text-muted small">{{ order.created_at|date:'Y-m-d H:i' }}</span>
-                                </li>
-                                {% endfor %}
-                            </ul>
-                        {% else %}
-                            <p class="text-center text-muted">No orders for your products yet.</p>
-                        {% endif %}
-                    </div>
+            </div>
+            <div class="drawer" id="orderDrawer" aria-hidden="true">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h3 id="drawerTitle">Order Detail</h3>
+                    <button class="drawer-close" onclick="closeOrderDrawer()">&times;</button>
                 </div>
+                <div id="drawerBody" style="font-size:.85rem;"></div>
+            </div>
+            <script>
+                const tabs=document.getElementById('sellerStatusTabs').querySelectorAll('.status-tab');
+                const tbody=document.querySelector('#sellerOrdersTable tbody');
+                tabs.forEach(t=>t.addEventListener('click',()=>{tabs.forEach(x=>x.classList.remove('active'));t.classList.add('active');const f=t.dataset.filter;[...tbody.querySelectorAll('tr')].forEach(r=>{r.style.display=(f==='all'||r.dataset.status===f)?'table-row':'none';});}));
+                function openOrderDrawer(id){const row=[...tbody.querySelectorAll('tr')].find(r=>r.firstElementChild.textContent.trim()===id);if(!row)return;const cells=row.querySelectorAll('td');const body=document.getElementById('drawerBody');body.innerHTML=`<p><strong>Product:</strong> ${cells[1].textContent}</p><p><strong>Buyer:</strong> ${cells[2].textContent}</p><p><strong>Quantity:</strong> ${cells[3].textContent}</p><p><strong>Total:</strong> ${cells[4].textContent}</p><p><strong>Status:</strong> ${cells[5].textContent}</p><p><strong>Created:</strong> ${cells[6].textContent}</p>`;document.getElementById('orderDrawer').classList.add('open');}
+                function closeOrderDrawer(){document.getElementById('orderDrawer').classList.remove('open');}
+                function requestOrderComplete(orderId,buyerId){fetch(`/warehouse/order/${orderId}/request-complete/`,{method:'POST',headers:{'X-CSRFToken':'{{ csrf_token }}','Content-Type':'application/json'},body:JSON.stringify({buyer_id:buyerId})}).then(r=>r.json()).then(d=>{if(d.success){showToast('Completion request sent.','success');updateRowStatus(orderId,'W','Waiting for buyer');}else{showToast(d.error||'Error','danger');}});}
+                function updateRowStatus(orderId,code,label){const row=[...tbody.querySelectorAll('tr')].find(r=>r.firstElementChild.textContent.trim()===orderId);if(!row)return;row.dataset.status=code;const badge=row.querySelector('.badge-status');if(badge){badge.className='badge-status st-'+code.toLowerCase();badge.textContent=label==='Waiting for buyer'?'Waiting for buyer confirmation':label;}}
+            </script>
             {% endif %}
         </div>
     </div>
