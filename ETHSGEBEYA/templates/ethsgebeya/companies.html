@@ -93,7 +93,7 @@
 
             <div class="company-actions">
                 <a href="{% url 'seller_profile' seller.id %}" class="btn btn-primary btn-sm"><i class="fas fa-eye me-1"></i> View Profile</a>
-                <form method="post" action="{% url 'toggle_follow_seller' seller_id=seller.id %}" class="d-inline">
+                <form method="post" action="{% url 'toggle_follow_seller' seller_id=seller.id %}" class="d-inline follow-toggle-form">
                     {% csrf_token %}
                     <button type="submit" class="btn btn-secondary btn-sm"><i class="fas fa-user-minus me-1"></i> Unfollow</button>
                 </form>
@@ -114,6 +114,32 @@
     document.addEventListener('DOMContentLoaded', function(){
         const searchInput=document.getElementById('searchInput');
         const tags=[...document.querySelectorAll('.filter-tag')];
+        // AJAX follow/unfollow
+        document.querySelectorAll('.follow-toggle-form').forEach(form=>{
+            form.addEventListener('submit', async (e)=>{
+                e.preventDefault();
+                const btn=form.querySelector('button');
+                const card=form.closest('.company-card');
+                const followersEl=card?.querySelector('.company-stats .stat .stat-value');
+                const csrf=form.querySelector('input[name="csrfmiddlewaretoken"]').value;
+                btn.disabled=true;
+                try{
+                    const res=await fetch(form.action,{method:'POST',headers:{'X-CSRFToken':csrf,'X-Requested-With':'XMLHttpRequest'}});
+                    if(!res.ok){ window.location.href='/sign-in/'; return; }
+                    const data=await res.json();
+                    if(typeof data.followed!=="undefined"){ // warehouse api
+                        if(followersEl && typeof data.followers!=="undefined"){ followersEl.textContent=data.followers; }
+                        if(data.followed){ btn.innerHTML='<i class="fas fa-user-minus me-1"></i> Unfollow'; }
+                        else{ btn.innerHTML='<i class="fas fa-user-plus me-1"></i> Follow';
+                            // On followed page, remove card when unfollowed
+                            const grid=document.getElementById('followedGrid');
+                            if(grid && card && grid.contains(card)){ card.remove(); }
+                        }
+                    }
+                }catch(err){ console.error(err); }
+                finally{ btn.disabled=false; }
+            });
+        });
         function filterSection(sectionSelector){
             const cards=[...document.querySelectorAll(sectionSelector+' .company-card')];
             const term=(searchInput.value||'').toLowerCase();
